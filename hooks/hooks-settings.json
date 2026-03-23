@@ -1,0 +1,31 @@
+{
+  "_comment": "Merge these entries into your ~/.claude/settings.json or .claude/settings.local.json",
+  "_docs": "https://code.claude.com/docs/en/hooks",
+
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/hooks/credential-guard.sh"
+          },
+          {
+            "type": "command",
+            "command": "bash ~/.claude/hooks/file-backup.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "WebSearch",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/hooks/search-year-fix.sh"
+          }
+        ]
+      }
+    ]
+  }
+}

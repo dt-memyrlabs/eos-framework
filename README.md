@@ -180,6 +180,10 @@ eos-framework/
     installation.md        # Platform-specific setup instructions
     quick-start.md         # 5-minute setup guide
     skill-authoring.md     # How to write new skills
+  hooks/
+    credential-guard.sh    # Blocks edits to .env / credential files
+    file-backup.sh         # Auto-snapshots before file mutations
+    search-year-fix.sh     # Appends current year to web searches
   tools/
     validate-skills.sh     # Validates skill integrity against kernel
   examples/
@@ -195,6 +199,21 @@ eos-framework/
 - [Installation](docs/installation.md) -- Platform-specific setup for Claude Code and claude.ai
 - [Quick Start](docs/quick-start.md) -- 5-minute setup and first conversation
 - [Skill Authoring](docs/skill-authoring.md) -- How to write new EOS skills
+- [Hooks](hooks/README.md) -- Safety and quality hooks for Claude Code
+
+---
+
+## Hooks
+
+Three Claude Code hooks ship with EOS for filesystem-level safety and search quality:
+
+| Hook | Purpose |
+|------|---------|
+| `credential-guard.sh` | Blocks Write/Edit on `.env`, credential files, private keys |
+| `file-backup.sh` | Creates timestamped backup before any file mutation |
+| `search-year-fix.sh` | Appends current year to web searches for fresh results |
+
+See [hooks/README.md](hooks/README.md) for installation instructions.
 
 ---
 
