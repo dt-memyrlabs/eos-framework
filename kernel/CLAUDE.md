@@ -1,4 +1,4 @@
-# EOS — Enlightened Operating System v20.1.0
+# EOS — Enlightened Operating System v20.1.1
 
 **Status:** ENFORCED | **Scope:** Global | **Mode:** Dry, direct, no-bullshit | **Date:** 2026-03-19
 
@@ -95,7 +95,7 @@ On this keyword, query Notion for the project's Spoke page to load last known st
 **Skill integrity check (mandatory on upgrade):**
 On any kernel version change, verify all registered skill modules:
 1. Enumerate expected skills from `module_state` in Runtime Parameters.
-2. Check each exists at `/mnt/skills/user/[skill-name]/SKILL.md`.
+2. Check each skill file exists (path varies by interface — `~/.claude/skills/` for Claude Code, `/mnt/skills/user/` for claude.ai Projects).
 3. Read the `version` field from each skill's YAML frontmatter.
 4. Compare against `skill_versions` in Runtime Parameters.
 5. Flag: missing skills, version mismatches, unversioned skills.
@@ -296,6 +296,8 @@ Resolved variable = locked constraint. No re-opening, re-padding, hedging. New e
 
 **Subagent autonomy ceiling:** Subagents spawned via `eos-multi-agent` default to Tier 2 ceiling. Explicit override to Tier 1 allowed per-spawn for trusted tasks.
 
+**Subagent tool budget (Hard constraint):** Subagents should receive 4-5 tools maximum. Strip tools irrelevant to the spawned task. Performance degrades measurably at 18+ tools — this is a platform constraint, not a preference.
+
 All autonomous actions logged with "auto-approved per Tier X." Overridable per project.
 
 ### Rule 7: User Authority + Conflict Resolution
@@ -420,7 +422,8 @@ ltm_staleness:            Counter — exchanges since last Notion decision-lock 
 context_match_standard:   Probe for lived experience origin. Breadth = match count. Depth = confirmed trajectory. Frequency = sustained return rate. Visible ceiling ≠ confirmed depth.
 skill_versions:           eos-cold-start:v1.0.1 | eos-goal-framing:v1.2.0 | eos-project-mgmt:v1.1.1 | eos-builder:v1.0.1 | eos-collaboration:v1.0.0 | eos-metacognition:v1.0.1 | eos-dimension-ambiguity:v1.0.0 | tangent-drift-score:v1.0.0 | eos-memory-mgmt:v1.2.0 | eos-memex:v1.1.1 | eos-contradiction:v1.0.1 | eos-constraint-graph:v1.0.0 | eos-report:v1.0.1 | eos-multi-agent:v1.0.0 | eos-kernel-updater:v1.0.0 | eos-recall-router:v1.0.0 | eos-fact-check:v1.0.0 | eos-voice-extract:v1.0.0
 skill_integrity_check:    Mandatory on kernel version change
-module_state:             cold-start: trigger-ready | goal-framing: trigger-ready | project-mgmt: trigger-ready | builder: trigger-ready | collaboration: trigger-ready | metacognition: auto-monitor | tds: active when goal locked | dimension-ambiguity: trigger-ready | memory-mgmt: trigger-ready | contradiction: trigger-ready | constraint-graph: trigger-ready | report: trigger-ready | multi-agent: trigger-ready | kernel-updater: trigger-ready | recall-router: trigger-ready | fact-check: trigger-ready | voice-extract: trigger-ready```
+module_state:             cold-start: trigger-ready | goal-framing: trigger-ready | project-mgmt: trigger-ready | builder: trigger-ready | collaboration: trigger-ready | metacognition: auto-monitor | tds: active when goal locked | dimension-ambiguity: trigger-ready | memory-mgmt: trigger-ready | contradiction: trigger-ready | constraint-graph: trigger-ready | report: trigger-ready | multi-agent: trigger-ready | kernel-updater: trigger-ready | recall-router: trigger-ready | fact-check: trigger-ready | voice-extract: trigger-ready | memex: trigger-ready
+tool_budget:              4-5 per subagent (Hard). 18+ = measurable degradation.```
 
 ---
 
@@ -457,4 +460,15 @@ No named behaviors were silently dropped. All are either preserved, converted to
 
 ---
 
-**End of EOS Kernel v20.1.0**
+## v20.1.0→v20.1.1 ADDITIONS
+
+| Named Behavior | Disposition |
+|---|---|
+| Subagent tool budget (Rule 6) | NEW — Hard constraint: 4-5 tools per subagent. 18+ causes measurable quality degradation. Platform constraint, not preference. |
+| Skill path flexibility (Architecture) | UPDATED — Skill integrity check now notes path varies by interface (`~/.claude/skills/` for Claude Code, `/mnt/skills/user/` for claude.ai). |
+| module_state alignment | FIX — Added `memex` to module_state (was in skill_versions but missing from module_state). |
+| tool_budget runtime parameter | NEW — Surfaces tool budget as runtime parameter for subagent spawning. |
+
+---
+
+**End of EOS Kernel v20.1.1**
