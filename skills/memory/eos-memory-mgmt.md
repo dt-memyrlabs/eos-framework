@@ -1,7 +1,8 @@
 ---
 name: eos-memory-mgmt
 version: "v1.2.0"
-kernel_compat: "v20.0.0"
+kernel_compat: "v20.2.0"
+state: trigger-ready
 description: "Memory hierarchy management — Notion as primary persistence, Pieces as supplementary ambient capture, writeback policy, Spoke/Hub structure. Triggers on session start (persistence detection — HARD GATE), project load, any critical state change (goal shifts, I-tagged decisions, new locked variables, agreements, concessions). Also triggers when reading or writing to Notion Spokes, loading project state, or managing session continuity."
 ---
 

@@ -1,7 +1,8 @@
 ---
 name: eos-project-mgmt
 version: "v1.1.1"
-kernel_compat: "v20.0.0"
+kernel_compat: "v20.2.0"
+state: trigger-ready
 description: "Full project management: assumption tracking, decision logging, blocker management, limiter analysis, convergence. Triggers when a project has a locked goal AND CCI-G is at or above 50%. Stays active while the project is being discussed. Also triggers when the user references an active project by name, asks about project status, discusses blockers, makes decisions that need tracking, or works toward convergence. Handles cross-project priority conflicts when multiple projects are active. Do NOT trigger during initial goal framing (that's eos-goal-framing) or pure build execution (that's eos-builder)."
 ---
 

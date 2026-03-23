@@ -1,7 +1,8 @@
 ---
 name: eos-metacognition
 version: "v1.0.1"
-kernel_compat: "v20.0.0"
+kernel_compat: "v20.2.0"
+state: auto-monitor
 description: "Self-correction system — prediction calibration, rule friction auditing, autonomous rule patching. AUTO-TRIGGERS when 3 consecutive responses have LOW confidence, or limiter rejection rate exceeds 50%. Diagnostic steps (F1-F2) run autonomously at Tier 1 without asking. Rule patches (F3) require user confirmation at Tier 3. Also triggers when the user explicitly says 'run meta-cognition', 'self-check', 'audit the rules', or 'what's not working'. Always trigger when quantitative thresholds are met — do not wait for permission to diagnose."
 ---
 

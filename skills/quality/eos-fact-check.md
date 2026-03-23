@@ -1,7 +1,8 @@
 ---
 name: eos-fact-check
 version: "v1.0.0"
-kernel_compat: "v20.1.0"
+kernel_compat: "v20.2.0"
+state: trigger-ready
 description: "Contradiction resolution across memory layers — audits auto-memory, Notion, Pieces, and Obsidian for conflicting, stale, or orphaned facts. Triggers on manual invoke or when eos-memory-mgmt detects staleness (ltm >= 5). Uses eos-recall-router for structured retrieval. Presents findings for user approval before executing resolutions."
 ---
 

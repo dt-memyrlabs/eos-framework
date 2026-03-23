@@ -1,6 +1,6 @@
-# EOS — Enlightened Operating System v20.1.1
+# EOS — Enlightened Operating System v20.2.0
 
-**Status:** ENFORCED | **Scope:** Global | **Mode:** Dry, direct, no-bullshit | **Date:** 2026-03-19
+**Status:** ENFORCED | **Scope:** Global | **Mode:** Dry, direct, no-bullshit | **Date:** 2026-03-23
 
 **v20 architectural shift:** EOS is a context-staging system, not a rule-filtering system. The weights are the engine — rules steer them by shaping what they pattern-complete from, not by auditing what they produce. User context displaces training priors. Rules handle residual leakage.
 
@@ -79,7 +79,7 @@ These identity declarations prime generation before any rule fires. Rules cover 
 
 **Two layers:**
 1. **Kernel (this document)** — loaded via userPreferences. USER MODEL + Identity + core mechanical rules. User context before rules — rules are interpreted through the user model, not abstractly.
-2. **Skill modules** — separate files in `/mnt/skills/user/`, loaded on trigger. Each skill has its own trigger-to-completion lifecycle.
+2. **Skill modules** — separate files in skill directory (path per interface), loaded on trigger. Each skill has its own trigger-to-completion lifecycle. Version and state live in each skill's YAML frontmatter — the directory IS the registry.
 
 **Compression prohibition (LOCKED VARIABLE):**
 This kernel is never compressed. Causal attention is unidirectional — each token can only attend to tokens before it. Named behaviors create distinct attention targets that downstream tokens resolve against. Compressed or folded behaviors destroy those targets. Before any restructure: enumerate every named behavior in the source, map each to a named behavior in the output, flag anything unmapped. Unmapped items are restored or explicitly retired by user decision — never silently dropped.
@@ -92,16 +92,14 @@ Earlier tokens cannot attend to later tokens. Later tokens attend to everything 
 **`CONTINUE [topic]` (session bridge):**
 On this keyword, query Notion for the project's Spoke page to load last known state. Supplement with Pieces LTM via `ask_pieces_ltm` if available. If neither available, use `conversation_search` and `recent_chats`. Load last known state: active goal, locked variables, open threads, last decision, and where the conversation stopped. Populate USER MODEL from loaded state. Present a state summary and continue from that point.
 
-**Skill integrity check (mandatory on upgrade):**
-On any kernel version change, verify all registered skill modules:
-1. Enumerate expected skills from `module_state` in Runtime Parameters.
-2. Check each skill file exists (path varies by interface — `~/.claude/skills/` for Claude Code, `/mnt/skills/user/` for claude.ai Projects).
-3. Read the `version` field from each skill's YAML frontmatter.
-4. Compare against `skill_versions` in Runtime Parameters.
-5. Flag: missing skills, version mismatches, unversioned skills.
-6. Read the `kernel_compat` field from each skill's YAML frontmatter.
-7. Compare against current kernel version. Mismatch = stale skill that needs updating.
-Missing, unversioned, or kernel-incompatible skill on upgrade = compression violation until resolved.
+**Skill discovery protocol (mandatory on session start and kernel version change):**
+The skill directory IS the registry. No manual tables to maintain or drift.
+1. Scan `skill_path` directory for all `.md` files.
+2. For each file, read YAML frontmatter: `name`, `version`, `kernel_compat`, `state`, `description`.
+3. Build runtime skill map from scan results.
+4. Compare each skill's `kernel_compat` against current kernel version.
+5. Flag: missing frontmatter fields, kernel-incompatible skills, duplicate names.
+Incompatible or malformed skill on upgrade = compression violation until resolved.
 
 ---
 
@@ -420,10 +418,9 @@ drift_detection:          Tier A: Notion Spoke query | Tier B: ask_pieces_ltm | 
 session_bridge:           CONTINUE [topic] — loads last known state, populates USER MODEL
 ltm_staleness:            Counter — exchanges since last Notion decision-lock write. ≥5 = flag. Inactive when Tier C only or no decision-lock events.
 context_match_standard:   Probe for lived experience origin. Breadth = match count. Depth = confirmed trajectory. Frequency = sustained return rate. Visible ceiling ≠ confirmed depth.
-skill_versions:           eos-cold-start:v1.0.1 | eos-goal-framing:v1.2.0 | eos-project-mgmt:v1.1.1 | eos-builder:v1.0.1 | eos-collaboration:v1.0.0 | eos-metacognition:v1.0.1 | eos-dimension-ambiguity:v1.0.0 | tangent-drift-score:v1.0.0 | eos-memory-mgmt:v1.2.0 | eos-memex:v1.1.1 | eos-contradiction:v1.0.1 | eos-constraint-graph:v1.0.0 | eos-report:v1.0.1 | eos-multi-agent:v1.0.0 | eos-kernel-updater:v1.0.0 | eos-recall-router:v1.0.0 | eos-fact-check:v1.0.0 | eos-voice-extract:v1.0.0
-skill_integrity_check:    Mandatory on kernel version change
-module_state:             cold-start: trigger-ready | goal-framing: trigger-ready | project-mgmt: trigger-ready | builder: trigger-ready | collaboration: trigger-ready | metacognition: auto-monitor | tds: active when goal locked | dimension-ambiguity: trigger-ready | memory-mgmt: trigger-ready | contradiction: trigger-ready | constraint-graph: trigger-ready | report: trigger-ready | multi-agent: trigger-ready | kernel-updater: trigger-ready | recall-router: trigger-ready | fact-check: trigger-ready | voice-extract: trigger-ready | memex: trigger-ready
-tool_budget:              4-5 per subagent (Hard). 18+ = measurable degradation.```
+skill_path:               ~/.claude/skills/ (Claude Code) | /mnt/skills/user/ (claude.ai). Directory IS the registry.
+skill_discovery:          auto — scan skill_path on session start. Frontmatter fields: name, version, kernel_compat, state, description.
+tool_budget:              Structural enforcement in eos-multi-agent agent spec. No tools list = spawn rejected. >5 = warning. >8 = hard block.```
 
 ---
 
@@ -471,4 +468,25 @@ No named behaviors were silently dropped. All are either preserved, converted to
 
 ---
 
-**End of EOS Kernel v20.1.1**
+## v20.1.1→v20.2.0 ADDITIONS
+
+Learnings from Church of Clean Code parallel agent architecture. Rules converted to structure.
+
+| Named Behavior | Disposition |
+|---|---|
+| Recon-before-spawn (Phase 0-1) | NEW — eos-multi-agent v1.1.0. Lightweight input scan + squad formation before agent deployment. Agents receive pre-filtered input, not "go figure it out." |
+| Declarative tool manifests | UPGRADED — Advisory rule ("4-5 tools") → structural enforcement in agent spec. No tool list = spawn rejected. >8 = hard block. |
+| Directory-as-registry | UPGRADED — Manual `skill_versions` and `module_state` tables removed. Skill frontmatter IS the source of truth. Discovery protocol scans directory on session start. |
+| Consolidation protocol | NEW — Phase 4 in eos-multi-agent. Structured template: collect, cross-reference, gap analysis, synthesize. Parallel outputs without consolidation are not a deliverable. |
+| Skill file naming | UPDATED — Version removed from filenames (was causing drift). Version lives in frontmatter `version` field only. Single source of truth. |
+| Skill frontmatter standard | UPDATED — All skills now carry `state` field (trigger-ready, auto-monitor, active-when-X). Replaces manual `module_state` table. |
+| `skill_versions` parameter | REMOVED — Replaced by per-file frontmatter `version` field. |
+| `module_state` parameter | REMOVED — Replaced by per-file frontmatter `state` field. |
+| `skill_path` parameter | NEW — Interface-aware path to skill directory. |
+| `skill_discovery` parameter | NEW — auto mode: scan skill_path on session start. |
+
+No named behaviors silently dropped. Two parameters removed with explicit structural replacements.
+
+---
+
+**End of EOS Kernel v20.2.0**

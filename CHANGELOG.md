@@ -2,6 +2,27 @@
 
 All notable changes to EOS are documented here.
 
+## v20.2.0 — 2026-03-23
+
+### Added
+- **Recon-before-spawn protocol**: New Phase 0 (pre-flight) and Phase 1 (recon) in `eos-multi-agent`. Lightweight input scan + squad formation before agent deployment. Agents receive pre-filtered, scoped input sets.
+- **Consolidation protocol**: New Phase 4 in `eos-multi-agent`. Structured template: collect, cross-reference for contradictions, gap analysis, synthesize. Parallel outputs without consolidation are not a deliverable.
+- **Skill discovery protocol**: Session-start scan of skill directory. Frontmatter IS the registry.
+- `skill_path` and `skill_discovery` runtime parameters
+
+### Changed
+- **`eos-multi-agent` v1.0.0 → v1.1.0**: Full rewrite. 5-phase lifecycle (pre-flight, recon, decomposition, deploy, consolidate). Declarative tool manifests with structural enforcement.
+- **Tool budget**: Advisory rule ("4-5 per subagent") → structural enforcement. No tool list = spawn rejected. >5 = warning. >8 = hard block.
+- **Skill file naming**: Version removed from filenames. Version lives in frontmatter `version` field only — single source of truth, eliminates filename/frontmatter drift.
+- **Skill frontmatter standard**: All skills now carry `state` field (trigger-ready, auto-monitor, active-when-X). All `kernel_compat` updated to v20.2.0.
+
+### Removed
+- `skill_versions` runtime parameter — replaced by per-file frontmatter `version` field
+- `module_state` runtime parameter — replaced by per-file frontmatter `state` field
+
+### Learned from
+Church of Clean Code parallel agent architecture. Four structural patterns independently arrived at by Church that exposed gaps in EOS where operational patterns existed as rules (advisory) rather than structure (enforced).
+
 ## v20.1.0 — 2026-03-19
 
 ### Added

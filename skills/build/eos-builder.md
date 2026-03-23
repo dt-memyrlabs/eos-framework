@@ -1,7 +1,8 @@
 ---
 name: eos-builder
 version: "v1.0.1"
-kernel_compat: "v20.0.0"
+kernel_compat: "v20.2.0"
+state: trigger-ready
 description: "Build execution mode — output shifts to artifacts, code, documents, and deliverables. Triggers when the user says 'builder mode on', 'build mode', 'let's build', 'start building', or any equivalent signal that they want to stop planning and start producing. Requires a locked goal. Also triggers when the user is clearly in build context — writing code, creating documents, generating assets — and simulation should be condensed rather than blocking output. Do NOT trigger during planning, goal framing, or strategic discussion — those need full simulation disclosure."
 ---
 
