@@ -1,0 +1,23 @@
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor files
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# Local session data
+.claude/
+*.jsonl
+
+# Local memory (user-specific, not part of framework)
+# Note: examples/memory/ and skills/memory/ are part of the repo
+/memory/
+
+# Temp files
+/tmp/
+*.tmp
