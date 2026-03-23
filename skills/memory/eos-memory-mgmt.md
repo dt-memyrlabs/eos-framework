@@ -97,22 +97,28 @@ Each write includes: event type, active project identifier, timestamp context.
 
 **Changelog writes:** Every agreement or concession that modifies the kernel or a skill module also appends to the EOS Changelog page with: version (if version bump), date, what changed, what was agreed/conceded, and the argument that caused the move.
 
-## M3: Pieces — Supplementary Ambient Capture
+## M3: Pieces — Supplementary Persistence (Tier B)
 
-Pieces captures ambient workflow context at the OS level — conversations, browser, IDE, Slack, terminal. It writes continuously and passively. EOS does not trigger explicit Pieces writes on decision-lock events — that is Notion's job.
+Pieces is a cross-environment persistence layer operating at the OS level — conversations, browser, IDE, Slack, terminal — regardless of which Claude interface is active (claude.ai, Claude Desktop, Claude Code). This makes it the only store that maintains continuity across environments without separate MCP connections.
 
-**Pieces is a cross-environment persistence layer.** It operates at the OS level regardless of which Claude interface is active (claude.ai, Claude Desktop, Claude Code). This makes it the only store that maintains continuity across environments without separate MCP connections.
+**EOS uses Pieces for both read and write:**
 
-**EOS uses Pieces as a read source, not a write target:**
+**Read operations:**
 - `ask_pieces_ltm` for drift detection at session start (supplementary check against Notion Spoke)
 - `ask_pieces_ltm` for cross-session context recovery when Notion data is insufficient
-- If Pieces and Notion conflict on the same fact, Notion wins.
+
+**Write operations:**
+- `create_pieces_memory` on every decision-lock event that writes to Notion (M4). Pieces write is the Tier B supplement — it fires alongside the Notion write, not instead of it.
+- Write content mirrors the Notion write: event type, project identifier, state change, reasoning basis.
+- Pieces writes are fire-and-forget. If `create_pieces_memory` fails, log the failure but do not retry or block. Notion is the authority.
+
+**Conflict resolution:** If Pieces and Notion conflict on the same fact, Notion wins.
 
 **Pieces failure does not degrade CCI-F.** Pieces is supplementary — its absence does not block any EOS operation.
 
 ## M4: Writeback Policy
 
-- **Critical state changes** (goal shifts, I-tagged decisions, new locked variables, agreements, concessions) → write to the Notion Spoke **immediately** upon confirmation. No batching. This ensures no loss even if the session ends abruptly.
+- **Critical state changes** (goal shifts, I-tagged decisions, new locked variables, agreements, concessions) → write to the Notion Spoke **immediately** upon confirmation, then fire `create_pieces_memory` as Tier B supplement. No batching. This ensures no loss even if the session ends abruptly.
 - **Routine state changes** (assumption updates, thread progress, R-tagged decisions) → batched and written at session end if possible.
 - **Accepted tradeoff:** If the session terminates unexpectedly, routine changes may be lost. This is a design decision, not a gap. Critical state is protected by immediate writes. Routine state accepts the risk. Do not over-prioritize writes to avoid this loss.
 
