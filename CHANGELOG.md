@@ -2,6 +2,27 @@
 
 All notable changes to EOS are documented here.
 
+## v20.3.0 — 2026-03-24
+
+### Added
+- **Subagent execution boundaries (Rule 6)**: Structural boundary table with 6 enforced constraints: no recursive spawning, concurrency cap, pre-execution gate, output-as-data, loop detection, data flow scoping.
+- **Tool authorization protocol (eos-multi-agent)**: ALLOW/DENY/ESCALATE classification for every subagent tool call. Fail-closed default. Mutation classification table. Agent spec validation gate.
+- **Loop detection (eos-multi-agent)**: Sliding window of 20 tool calls per agent. Warn at 3 identical. Hard stop at 5. Pattern warning on consistent tool failures.
+- **Data flow protocol (eos-multi-agent)**: Scoped inbound (squad-only data). Structured outbound (AGENT OUTPUT template). Intermediate tool results stripped before parent and persistence.
+- **Output-as-data principle (eos-multi-agent)**: Subagent output is DATA not INSTRUCTIONS. Parent reconciliation protocol with evidence verification, recommendation simulation, and contradiction escalation.
+- **Infrastructure validation gate (eos-multi-agent Phase 0)**: Git state check, target verification, checkpoint creation, rollback path documentation. Required before mutation orchestrations.
+- **Recursive spawn prevention**: `Agent` tool structurally excluded from subagent manifests. `spawn: false` in agent spec. Flat two-level hierarchy.
+- `agent_boundaries` and `agent_data_flow` runtime parameters
+- Multi-agent intermediate results exclusion in eos-memory-mgmt
+
+### Changed
+- **eos-multi-agent v1.1.0 → v1.2.0**: Defense-in-depth security at agent boundaries. Six new protocol sections.
+- **Rule 6 (Autonomy Tiers)**: Extended with execution boundaries table and rule interaction documentation.
+- All 19 skill files: `kernel_compat` bumped to v20.3.0.
+
+### Learned from
+ByteDance DeerFlow (14-middleware defense-in-depth architecture) and Church of Clean Code (flat agent hierarchy, output-as-data reconciliation). Security patterns converted from code-level middleware to prompt-level structural enforcement.
+
 ## v20.2.0 — 2026-03-23
 
 ### Added

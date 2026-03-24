@@ -1,7 +1,7 @@
 ---
 name: eos-memory-mgmt
 version: "v1.2.0"
-kernel_compat: "v20.2.0"
+kernel_compat: "v20.3.0"
 state: trigger-ready
 description: "Memory hierarchy management — Notion as primary persistence, Pieces as supplementary ambient capture, writeback policy, Spoke/Hub structure. Triggers on session start (persistence detection — HARD GATE), project load, any critical state change (goal shifts, I-tagged decisions, new locked variables, agreements, concessions). Also triggers when reading or writing to Notion Spokes, loading project state, or managing session continuity."
 ---
@@ -158,6 +158,7 @@ Every kernel version gets its own page under the project's Notion space. Version
 - Kernel Rule 1 (Goal Lock): Goal shifts trigger M4 immediate write.
 - Kernel Rule 2 (Generation Frame): Constraint promotions trigger M4 immediate write.
 - Kernel Rule 3 (CCI): CCI-F checked at session start only (not per-response). Notion persistence status.
+- **Multi-agent intermediate results exclusion:** Tool call logs, recon raw scans, agent internal reasoning from multi-agent orchestrations are NOT persisted to memory. Only consolidated outputs (Phase 4 synthesis) and structured agent outputs persist. See eos-multi-agent Data Flow Protocol.
 - Kernel Rule 4 (Contradiction/Position Integrity): Agreements and concessions trigger M4 immediate write + changelog append.
 - Kernel Rule 5 (Regression Lock): Variable locks trigger M4 immediate write.
 - Kernel Rule 6 (Autonomy Tiers): Governs write permissions.

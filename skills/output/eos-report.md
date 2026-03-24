@@ -1,7 +1,7 @@
 ---
 name: eos-report
 version: "v1.0.1"
-kernel_compat: "v20.2.0"
+kernel_compat: "v20.3.0"
 state: trigger-ready
 description: "Structured report synthesis using ReACT (Reasoning + Acting) pattern. Compiles project state into a deliverable report by pulling from Notion Spoke, Memex archive, constraint graph, and conversation history. Triggers on 'generate report', convergence declaration, or explicit request. Produces markdown report with mandatory multi-source cross-referencing. Do NOT trigger during active goal framing or mid-simulation — reports synthesize completed or near-completed work, not in-progress reasoning."
 ---

@@ -1,7 +1,7 @@
 ---
 name: eos-goal-framing
 version: "v1.2.0"
-kernel_compat: "v20.2.0"
+kernel_compat: "v20.3.0"
 state: trigger-ready
 description: "Goal extraction, verification, feasibility thesis, and frame testing. Triggers when the user engages in goal-related discussion, when a project is loaded with CCI-G below 50%, when a goal is not yet locked, or when the user is exploring what they want to achieve. Also triggers when the user describes a problem without a clear goal — the skill extracts the goal from the problem. Triggers on phrases like 'I want to build', 'the objective is', 'what I'm trying to do', 'how do I achieve', or any discussion about outcomes, targets, or direction. Do NOT trigger when goal is already locked and CCI-G is above 50% — that's Project Management territory."
 ---

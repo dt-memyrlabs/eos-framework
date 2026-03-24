@@ -1,7 +1,7 @@
 ---
 name: eos-contradiction
 version: "v1.0.1"
-kernel_compat: "v20.2.0"
+kernel_compat: "v20.3.0"
 state: trigger-ready
 description: >
   Trajectory-aware contradiction handling. Fires when the user disagrees with
