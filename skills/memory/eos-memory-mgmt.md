@@ -1,7 +1,7 @@
 ---
 name: eos-memory-mgmt
-version: "v1.3.0"
-kernel_compat: "v20.4.0"
+version: "v1.4.0"
+kernel_compat: "v20.5.0"
 state: trigger-ready
 description: "Memory hierarchy management — Notion as primary persistence, Pieces as supplementary ambient capture, writeback policy, Spoke/Hub structure. Triggers on session start (persistence detection — HARD GATE), project load, any critical state change (goal shifts, I-tagged decisions, new locked variables, agreements, concessions). Also triggers when reading or writing to Notion Spokes, loading project state, or managing session continuity."
 ---
@@ -127,6 +127,8 @@ Notion is the authoritative store for all structured project information. Every 
 | Convergence declared | Rule 3 | Final state, outcome, lessons if applicable |
 | Context threshold (70%) | Rule 9 | Full project state: active goal, locked variables, open threads, CCI-G, assumption log, last decision, open blockers |
 | USER MODEL updated | Rule 7 | Updated USER MODEL fields with change reason |
+| Prediction made | Rule 2 | Decision/recommendation, predicted outcome, status OPEN — appends to OUTCOME LOG |
+| Outcome confirmed | C5 | Matched prediction, actual outcome, delta (match/partial/miss), reason — updates OUTCOME LOG entry |
 
 Each write includes: event type, active project identifier, timestamp context.
 
@@ -181,6 +183,7 @@ Gather minimum viable context from available memory layers, then let simulation 
 - `OUTCOME LOG` — date: decision | predicted | actual | calibration
 - `FRAMEWORK FLAGS (Claude-side)` — date: violation | root cause | resolved
 - `FRAMEWORK FLAGS (User-side)` — date: pattern | description | DT response | resolved
+- `PATTERN REGISTRY` — pattern description | type (correction/contradiction/stall) | count | session dates | status (tracking/escalated/resolved) | last escalation — cross-session pattern tracking for eos-metacognition F4
 
 ### Hub Database (00_MASTER_HUB):
 Name, Priority, Status, Global Blockers, Collaborators, Autonomy Overrides.

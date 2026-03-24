@@ -1,9 +1,9 @@
 ---
 name: eos-metacognition
-version: "v1.1.0"
-kernel_compat: "v20.4.0"
+version: "v1.2.0"
+kernel_compat: "v20.5.0"
 state: auto-monitor
-description: "Self-correction system — early warning detection, prediction calibration, rule friction auditing, autonomous rule patching. F0 (early warning) runs passively every response when goal is locked, detecting degradation patterns (confidence decay, assumption accumulation, CCI-G stall, trajectory churn, user correction clustering) before they hit diagnostic thresholds. Auto-escalates to F1 when 2+ signals detected. F1-F2 (diagnostic) AUTO-TRIGGER on threshold breach: 3 consecutive LOW confidence or limiter rejection rate > 50%. F3 (patching) requires user confirmation at Tier 3. Also triggers on explicit request ('run meta-cognition', 'self-check', 'audit the rules')."
+description: "Self-correction system — early warning detection, prediction calibration, rule friction auditing, autonomous rule patching, cross-session pattern tracking. F0 (early warning) runs passively every response when goal is locked, detecting degradation patterns before they hit diagnostic thresholds. Auto-escalates to F1 when 2+ signals detected. F1-F2 (diagnostic) AUTO-TRIGGER on threshold breach: 3 consecutive LOW confidence or limiter rejection rate > 50%. F3 (patching) requires user confirmation at Tier 3 — includes anti-churn check against patch history. F4 (cross-session patterns) loads pattern registry from Notion at session start, checks in-session corrections against cross-session history, escalates at 3+ occurrences. Also triggers on explicit request ('run meta-cognition', 'self-check', 'audit the rules')."
 ---
 
 # Module F: Meta-Cognition (Self-Correction)
@@ -16,7 +16,8 @@ description: "Self-correction system — early warning detection, prediction cal
 **Autonomy:**
 - F0 (early warning): **Tier 1 — runs autonomously.** Passive monitor. Surfaces signal only when pattern detected.
 - F1-F2 (diagnostic): **Tier 1 — runs autonomously.** The metrics triggered, the system responds.
-- F3 (patching): **Tier 3 — requires user confirmation.** Changing rules is irreversible.
+- F3 (patching): **Tier 3 — requires user confirmation.** Changing rules is irreversible. Anti-churn check before proposing.
+- F4 (cross-session patterns): **Tier 1 — load and check autonomous.** Escalation follows F3/kernel-updater Tier 3 gates.
 
 **Kernel rules in play:** Rule 2 (Generation Frame + self-audit), Rule 4 (Contradiction — including internal), Rule 6 (Autonomy Tiers), Rule 7 (Conflict Resolution — including internal).
 
@@ -86,6 +87,8 @@ Draft specific amendment to EOS (kernel or skill file):
 
 **Anti-loop Safeguard:** After a patch is applied, F3 won't propose another patch for the same root cause for at least 5 sessions, unless user explicitly requests.
 
+**Anti-churn check:** Before proposing any patch, query Notion for the target rule's patch history (via `eos-kernel-updater` log). If 2+ prior patches exist on the same rule across sessions, do not propose an incremental patch. Instead, escalate to `eos-kernel-updater` with classification `STRUCTURAL_REVIEW`. Flag: `F3 churn detected on [rule]: [N] prior patches. Escalating to structural review.` The rule needs redesign, not another tune.
+
 ---
 
 ## Post-Diagnostic
@@ -95,3 +98,65 @@ After F1-F2 complete:
 - If F3 is warranted, present the patch proposal immediately.
 - If nothing actionable found, say so and return to normal operation.
 - Don't linger on self-analysis. Diagnose, propose if needed, move.
+
+---
+
+## F4. Cross-Session Pattern Registry (Tier 1 — autonomous load/check)
+
+Tracks correction, contradiction, and stall patterns across sessions. The point: detect that the same type of mistake keeps happening, not just within one session but across many.
+
+### F4.1: Session Start (Load)
+
+On session start when a goal is loaded from Notion (after M1 persistence detection completes):
+
+1. Query Notion Spoke `PATTERN REGISTRY` section via `eos-recall-router` with query type `project_state`.
+2. Load active patterns (status: `tracking` or `escalated`) into working context as compact summary: `[patterns: N tracking, M escalated]`.
+3. If no PATTERN REGISTRY section exists or is empty, initialize: `[patterns: none — first tracked session]`.
+
+### F4.2: During Session (Check)
+
+When F0 detects a user correction (the "user correction clustering" signal) or when F1 identifies a misalignment pattern:
+
+1. Extract the correction signature: which rule was violated, what behavior class was wrong, which variable or topic was involved.
+2. Match against loaded patterns from F4.1 — match by rule, behavior class, or variable (subject similarity, not exact string match).
+3. **No match:** Create a new pattern entry with count=1. Hold in working memory until session end.
+4. **Match found:** Increment occurrence count. If the match is against a pattern from a previous session (not just current), this is a cross-session recurrence.
+5. **Escalation threshold (3+ occurrences across distinct sessions):**
+   - Surface: `CROSS-SESSION PATTERN DETECTED: [description]. Occurred in [N] sessions. This is structural, not incidental.`
+   - If the pattern implicates a specific kernel rule → escalate to `eos-kernel-updater` with the pattern as evidence.
+   - If the pattern implicates a skill behavior → escalate to F3 (which will apply its own anti-churn check before patching).
+   - Update pattern status to `escalated`.
+
+### F4.3: Session End (Write)
+
+At session end (alongside voice-extract and kernel-updater triggers):
+
+1. Collect all new and updated patterns from the current session.
+2. Write to Notion Spoke `PATTERN REGISTRY` section:
+   - New patterns: append with count=1, current session date, status=`tracking`.
+   - Updated patterns: increment count, append current session date, update status if escalated.
+   - Resolved patterns (user confirmed the fix worked): update status to `resolved`.
+3. This is a Tier 1 write — same class as decision-lock events. Patterns are state that must not be lost.
+
+### F4.4: Pattern Entry Schema
+
+```
+| Pattern | Type | Count | Sessions | Status | Last Escalation |
+|---|---|---|---|---|---|
+| [description] | correction/contradiction/stall | [N] | [date1, date2, ...] | tracking/escalated/resolved | [date or —] |
+```
+
+### F4.5: Integration
+
+- **C5.3 (Outcome Accuracy):** Persistent prediction bias detected by C5.3 is registered as a pattern in F4 (type: `stall` — the system keeps making the same prediction error).
+- **F0 (Early Warning):** F0's "user correction clustering" signal is the primary input for F4 pattern matching.
+- **eos-kernel-updater:** Escalated patterns become evidence inputs for kernel update proposals.
+
+---
+
+## Cross-References
+
+- **eos-kernel-updater:** F3 anti-churn check queries kernel-updater's patch history. F4 escalates cross-session patterns to kernel-updater for structural review.
+- **eos-recall-router:** F4.1 uses `project_state` query type to load PATTERN REGISTRY from Notion.
+- **eos-memory-mgmt:** PATTERN REGISTRY is an Extended Section in the Notion Spoke (M5).
+- **eos-project-mgmt C5.3:** Persistent prediction bias feeds into F4 as a stall-type pattern.

@@ -2,6 +2,31 @@
 
 All notable changes to EOS are documented here.
 
+## v20.5.0 — 2026-03-24
+
+### Added
+- **Cross-session pattern registry (eos-metacognition F4)**: Persists correction/contradiction/stall patterns to Notion Spoke PATTERN REGISTRY. Loads at session start via recall-router. Matches in-session corrections against cross-session history. 3+ occurrences across distinct sessions escalates to F3 or kernel-updater. Tier 1 load/check, escalation follows existing Tier 3 gates.
+- **Patch churn detection (eos-kernel-updater Step 1.5)**: Loads per-rule patch history from Notion kernel update log before classifying proposals. 3+ patches on same rule triggers STRUCTURAL_REVIEW classification — proposes architectural redesign direction instead of another text diff.
+- **F3 anti-churn check (eos-metacognition F3)**: Before proposing any rule patch, queries patch history. 2+ prior patches on same rule = escalate to kernel-updater STRUCTURAL_REVIEW instead of proposing incremental patch. Prevents metacognition from contributing to churn.
+- **Constraint minimization query (eos-constraint-graph G2.6)**: Finds minimum set of constraints to relax to reach goal. Ranks by classification softness, cascade risk, goal-distance impact. Integrates with sim-depth 6 Monte Carlo and C7 Limiter Analysis. Tier 1 read-only query.
+- **PATTERN REGISTRY Spoke section (eos-memory-mgmt M5)**: New Extended Section for cross-session pattern tracking. Schema: pattern description, type, count, session dates, status, last escalation.
+- **M2 prediction/outcome events (eos-memory-mgmt M2)**: Two new decision-lock event types for OUTCOME LOG writes.
+- `cross_session_patterns`, `outcome_tracking`, `patch_churn_detection` runtime parameters
+
+### Changed
+- **eos-metacognition v1.1.0 → v1.2.0**: F4 cross-session pattern registry added. F3 anti-churn check added. Description and autonomy section updated.
+- **eos-project-mgmt v1.1.1 → v1.2.0**: C5 expanded from 8-line stub to full operational outcome tracking (C5.1 prediction capture, C5.2 outcome capture, C5.3 accuracy analysis). C7 Limiter Analysis enhanced with G2.6 minimization query integration.
+- **eos-constraint-graph v1.0.0 → v1.1.0**: G2.6 minimization query added. Cross-reference to C7 updated.
+- **eos-voice-extract v1.0.0 → v1.1.0**: V2 deduplication upgraded from auto-memory-only to cross-layer (checks auto-memory, Notion, Pieces via recall-router cross_layer query). Four outcome types: exact duplicate, evolution, cross-layer duplicate, new.
+- **eos-kernel-updater v1.0.0 → v1.1.0**: Step 1.5 (patch history loading) and STRUCTURAL_REVIEW classification added. Step 5 logging enhanced with patch counts.
+- **eos-memory-mgmt v1.3.0 → v1.4.0**: M2 table expanded with prediction/outcome events. M5 Extended Sections expanded with PATTERN REGISTRY.
+- All modified skills: `kernel_compat` bumped to v20.5.0.
+
+### Learned from
+Gap analysis of v20.4.0: in-session metacognition strong but cross-session learning absent (same mistakes recur without detection), rule patches accumulate without structural review (tuning ≠ fixing), constraint graph missing optimization queries (can describe but not minimize), voice extract deduplicates within auto-memory but not across layers (fact proliferation), OUTCOME LOG exists in Spoke schema but nothing writes to it (predictions never compared to reality).
+
+---
+
 ## v20.4.0 — 2026-03-24
 
 ### Added

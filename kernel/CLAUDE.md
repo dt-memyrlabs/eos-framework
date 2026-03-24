@@ -1,4 +1,4 @@
-# EOS — Enlightened Operating System v20.4.0
+# EOS — Enlightened Operating System v20.5.0
 
 **Status:** ENFORCED | **Scope:** Global | **Mode:** Dry, direct, no-bullshit | **Date:** 2026-03-24
 
@@ -446,7 +446,10 @@ cross_agent_validation:   Structural enforcement in eos-multi-agent Phase 3.5. C
 reconciliation_audit:     Structural enforcement in eos-multi-agent Phase 4.5. Evidence tracing, omission detection, contradiction honoring, confidence inflation check. Runs after consolidation, before presentation.
 early_warning:            Passive monitor in eos-metacognition F0. Fires every response when goal locked. Detects degradation patterns before F1-F2 thresholds. Auto-escalates at 2+ signals.
 contradiction_mining:     Pattern extraction in eos-contradiction C7. Fires at 3+ contradiction history entries. Extracts hidden constraints from rejection patterns. Max 2 presentations per session.
-skill_breach_protocol:    Structural enforcement in eos-memory-mgmt M1.5. Minor behind = warn. Major behind or missing = disable. Future = warn. Bulk report at >3 incompatible.```
+skill_breach_protocol:    Structural enforcement in eos-memory-mgmt M1.5. Minor behind = warn. Major behind or missing = disable. Future = warn. Bulk report at >3 incompatible.
+cross_session_patterns:   Loaded at session start from Notion Spoke PATTERN REGISTRY. In-session corrections checked against cross-session history. 3+ occurrences across distinct sessions = escalation to F3 or kernel-updater. See eos-metacognition F4.
+outcome_tracking:         Predictions auto-logged to Notion Spoke OUTCOME LOG on trajectory selection, I-tagged decisions, limiter reframes. Outcomes matched on user confirmation. Accuracy analysis at 5+ resolved entries. See eos-project-mgmt C5.
+patch_churn_detection:    Per-rule patch history loaded from Notion at kernel-updater Step 1.5. 3+ patches on same rule = STRUCTURAL_REVIEW. F3 anti-churn check at 2+ prior patches. See eos-kernel-updater Step 1.5 + eos-metacognition F3.```
 
 ---
 
@@ -556,4 +559,27 @@ No named behaviors from v20.3.0 were dropped. Ten new named behaviors added.
 
 ---
 
-**End of EOS Kernel v20.4.0**
+## v20.4.0→v20.5.0 ADDITIONS
+
+Self-improvement loop closure. Five operational gaps addressed: cross-session learning, patch churn detection, constraint optimization, cross-layer deduplication, outcome tracking. The framework now learns from its own history across sessions.
+
+| Named Behavior | Disposition |
+|---|---|
+| Cross-session pattern registry (eos-metacognition F4) | NEW — Persists correction/contradiction/stall patterns to Notion Spoke PATTERN REGISTRY. Loads at session start. Matches in-session corrections against cross-session history. 3+ occurrences across distinct sessions escalates to F3 or kernel-updater. Tier 1 load/check, escalation follows existing Tier 3 gates. |
+| Patch churn detection (eos-kernel-updater Step 1.5) | NEW — Loads per-rule patch history from Notion kernel update log. 3+ patches on same rule triggers STRUCTURAL_REVIEW classification instead of incremental patch. Structural review proposes architectural redesign direction, not text diffs. |
+| F3 anti-churn check (eos-metacognition F3) | NEW — Before proposing a rule patch, queries patch history. 2+ prior patches on same rule = escalate to kernel-updater STRUCTURAL_REVIEW instead of proposing another incremental patch. Prevents metacognition from contributing to churn. |
+| Constraint minimization query (eos-constraint-graph G2.6) | NEW — Finds minimum set of constraints to relax to reach goal. Ranks by classification softness, cascade risk, goal-distance impact. Integrates with sim-depth 6 Monte Carlo and C7 Limiter Analysis as optimization primitive. Tier 1 (read-only query). |
+| Cross-layer voice dedup (eos-voice-extract V2) | UPGRADED — V2 deduplication changed from auto-memory-only to cross_layer query via eos-recall-router. Checks all populated layers (auto-memory, Notion, Pieces) before writing. Four outcomes: exact duplicate, evolution, cross-layer duplicate (ALREADY PERSISTED), new. Prevents fact proliferation across layers. |
+| Outcome tracking wiring (eos-project-mgmt C5) | UPGRADED — C5 expanded from concept to operational. C5.1 auto-captures predictions on trajectory selection, I-tagged decisions, limiter reframes. C5.2 matches outcomes on user confirmation. C5.3 runs accuracy analysis at 5+ entries — match rate, bias categorization, pattern detection. Persistent bias feeds into F4. |
+| C7 minimization integration (eos-project-mgmt C7) | UPGRADED — Limiter Analysis now queries G2.6 minimization when constraint graph is active. Focuses constraint challenges on minimum relaxation set instead of challenging one at a time. |
+| M2 prediction/outcome events (eos-memory-mgmt M2) | NEW — Two new decision-lock event types: prediction made (writes to OUTCOME LOG), outcome confirmed (updates OUTCOME LOG entry). Tier 1 writes. |
+| PATTERN REGISTRY Spoke section (eos-memory-mgmt M5) | NEW — Extended Section in Notion Spoke for cross-session pattern tracking. Schema: pattern description, type, count, session dates, status, last escalation. |
+| `cross_session_patterns` parameter | NEW — Runtime parameter surfacing F4 state. |
+| `outcome_tracking` parameter | NEW — Runtime parameter surfacing C5 state. |
+| `patch_churn_detection` parameter | NEW — Runtime parameter surfacing Step 1.5 and F3 anti-churn state. |
+
+No named behaviors from v20.4.0 were dropped. Twelve new named behaviors added.
+
+---
+
+**End of EOS Kernel v20.5.0**

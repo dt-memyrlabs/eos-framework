@@ -1,9 +1,9 @@
 ---
 name: eos-voice-extract
-version: "v1.0.0"
-kernel_compat: "v20.4.0"
+version: "v1.1.0"
+kernel_compat: "v20.5.0"
 state: trigger-ready
-description: "Session voice fact extraction — scans conversation for uncaptured directives, preferences, habits, beliefs, and goals. Classifies using CORE-derived taxonomy. Cross-checks against existing auto-memory to skip duplicates. Presents extracted facts for user approval before writing. Triggers at session end, on CONTINUE keyword, or manual invoke."
+description: "Session voice fact extraction — scans conversation for uncaptured directives, preferences, habits, beliefs, and goals. Classifies using CORE-derived taxonomy. Cross-layer deduplication checks all populated persistence layers (auto-memory, Notion, Pieces) before writing. Presents extracted facts for user approval before writing. Triggers at session end, on CONTINUE keyword, or manual invoke."
 ---
 
 # EOS Voice Extract Skill
@@ -39,7 +39,7 @@ Review the current conversation history for statements that reveal the user's op
 - Facts already captured in auto-memory — dedup against existing files.
 - Facts that belong in Notion project state (locked variables, decisions) — those are handled by `eos-memory-mgmt`.
 
-## V2: Classify and Deduplicate
+## V2: Classify and Cross-Layer Deduplicate
 
 ### Step 1: Classify each extracted fact
 
@@ -52,13 +52,14 @@ Map to auto-memory type:
 - Belief → `user` (describes the user's mental model)
 - Goal → `project` (describes an active target)
 
-### Step 2: Deduplicate against existing auto-memory
+### Step 2: Cross-layer deduplicate against all persistence layers
 
-Use `eos-recall-router` with query type `feedback_recall` and `user_context` to retrieve existing auto-memory facts. For each extracted fact:
+Use `eos-recall-router` with query type `cross_layer` to retrieve existing facts from all populated layers (auto-memory, Notion Spoke, Pieces LTM). For each extracted fact:
 
-- **Exact duplicate:** Same fact already exists → skip.
-- **Evolution:** Existing fact on same topic but with different/updated claim → flag as update candidate (will replace existing file).
-- **New:** No existing fact on this topic → flag as new addition.
+- **Exact duplicate (any layer):** Same fact already exists in auto-memory, Notion Spoke, or Pieces LTM → skip. Source attribution: note which layer holds the existing copy.
+- **Evolution:** Existing fact on same topic in any layer but with different/updated claim → flag as update candidate. If the existing version is in Notion (authoritative), flag for user review before overwriting.
+- **Cross-layer duplicate:** Fact exists in Notion or Pieces but NOT in auto-memory → flag as `ALREADY PERSISTED` (not a gap, just not in the fast-access layer). User can choose to add an auto-memory copy for session-level access.
+- **New:** No existing fact on this topic in any layer → flag as new addition.
 
 ## V3: Present for Approval
 
@@ -130,7 +131,7 @@ Voice extraction complete:
 ---
 
 ## Cross-References
-- `eos-recall-router`: Used in V2 for deduplication against existing auto-memory.
+- `eos-recall-router`: Used in V2 for cross-layer deduplication (query type `cross_layer` — checks auto-memory, Notion, and Pieces before writing).
 - `eos-memory-mgmt`: Voice-extract handles conversational fact capture. Memory-mgmt handles decision-lock event writes to Notion. Different triggers, complementary coverage.
 - `eos-fact-check`: After voice-extract writes new facts, fact-check can verify consistency across layers.
 - Auto-memory system: This skill is the intake mechanism for auto-memory. Fact-check is the maintenance mechanism.
