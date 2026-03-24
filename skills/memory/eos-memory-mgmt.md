@@ -183,7 +183,7 @@ Gather minimum viable context from available memory layers, then let simulation 
 - `OUTCOME LOG` — date: decision | predicted | actual | calibration
 - `FRAMEWORK FLAGS (Claude-side)` — date: violation | root cause | resolved
 - `FRAMEWORK FLAGS (User-side)` — date: pattern | description | DT response | resolved
-- `PATTERN REGISTRY` — pattern description | type (correction/contradiction/stall) | count | session dates | status (tracking/escalated/resolved) | last escalation — cross-session pattern tracking for eos-metacognition F4
+- `PATTERN REGISTRY` — supplementary backup of `tasks/lessons.md` content. Primary store is file-based. Notion copy maintained for cross-device access if needed. See eos-metacognition F4.
 
 ### Hub Database (00_MASTER_HUB):
 Name, Priority, Status, Global Blockers, Collaborators, Autonomy Overrides.

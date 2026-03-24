@@ -3,7 +3,7 @@ name: eos-metacognition
 version: "v1.2.0"
 kernel_compat: "v20.5.0"
 state: auto-monitor
-description: "Self-correction system — early warning detection, prediction calibration, rule friction auditing, autonomous rule patching, cross-session pattern tracking. F0 (early warning) runs passively every response when goal is locked, detecting degradation patterns before they hit diagnostic thresholds. Auto-escalates to F1 when 2+ signals detected. F1-F2 (diagnostic) AUTO-TRIGGER on threshold breach: 3 consecutive LOW confidence or limiter rejection rate > 50%. F3 (patching) requires user confirmation at Tier 3 — includes anti-churn check against patch history. F4 (cross-session patterns) loads pattern registry from Notion at session start, checks in-session corrections against cross-session history, escalates at 3+ occurrences. Also triggers on explicit request ('run meta-cognition', 'self-check', 'audit the rules')."
+description: "Self-correction system — early warning detection, prediction calibration, rule friction auditing, autonomous rule patching, cross-session lessons. F0 (early warning) runs passively every response when goal is locked, detecting degradation patterns before they hit diagnostic thresholds. Auto-escalates to F1 when 2+ signals detected. F1-F2 (diagnostic) AUTO-TRIGGER on threshold breach: 3 consecutive LOW confidence or limiter rejection rate > 50%. F3 (patching) requires user confirmation at Tier 3 — includes anti-churn check against patch history. F4 (cross-session lessons) reads tasks/lessons.md at session start, writes corrections immediately on occurrence, escalates at 3+ cross-session occurrences. File-based — no external dependency. Also triggers on explicit request ('run meta-cognition', 'self-check', 'audit the rules')."
 ---
 
 # Module F: Meta-Cognition (Self-Correction)
@@ -101,62 +101,70 @@ After F1-F2 complete:
 
 ---
 
-## F4. Cross-Session Pattern Registry (Tier 1 — autonomous load/check)
+## F4. Cross-Session Lessons (Tier 1 — autonomous load/check)
 
-Tracks correction, contradiction, and stall patterns across sessions. The point: detect that the same type of mistake keeps happening, not just within one session but across many.
+Tracks correction, contradiction, and stall patterns across sessions via `tasks/lessons.md`. File-based — no external dependency. The point: detect that the same type of mistake keeps happening, and build self-correcting rules from corrections.
 
 ### F4.1: Session Start (Load)
 
-On session start when a goal is loaded from Notion (after M1 persistence detection completes):
+On session start (after M1 persistence detection completes, before substantive work):
 
-1. Query Notion Spoke `PATTERN REGISTRY` section via `eos-recall-router` with query type `project_state`.
-2. Load active patterns (status: `tracking` or `escalated`) into working context as compact summary: `[patterns: N tracking, M escalated]`.
-3. If no PATTERN REGISTRY section exists or is empty, initialize: `[patterns: none — first tracked session]`.
+1. Read `tasks/lessons.md` from the project root. If file does not exist, create it with the schema from F4.4.
+2. Load active lessons (status: `tracking` or `escalated`) into working context as compact summary: `[lessons: N tracking, M escalated]`.
+3. **Apply lessons proactively.** For each active lesson, treat its `rule` field as a behavioral constraint for this session. The lesson is a correction that must not repeat.
 
-### F4.2: During Session (Check)
+### F4.2: During Session (Record)
 
-When F0 detects a user correction (the "user correction clustering" signal) or when F1 identifies a misalignment pattern:
+When F0 detects a user correction (the "user correction clustering" signal), when F1 identifies a misalignment pattern, or when the user explicitly corrects behavior:
 
-1. Extract the correction signature: which rule was violated, what behavior class was wrong, which variable or topic was involved.
-2. Match against loaded patterns from F4.1 — match by rule, behavior class, or variable (subject similarity, not exact string match).
-3. **No match:** Create a new pattern entry with count=1. Hold in working memory until session end.
-4. **Match found:** Increment occurrence count. If the match is against a pattern from a previous session (not just current), this is a cross-session recurrence.
-5. **Escalation threshold (3+ occurrences across distinct sessions):**
-   - Surface: `CROSS-SESSION PATTERN DETECTED: [description]. Occurred in [N] sessions. This is structural, not incidental.`
+1. Extract the correction signature: what went wrong, which rule was violated (if any), what the correct behavior should be.
+2. Write a self-correcting rule: a concise imperative statement that prevents the same mistake. Not a description of the error — a rule that fixes it.
+3. Match against loaded lessons from F4.1 — match by rule violated or behavior class.
+4. **No match:** Append new lesson to `tasks/lessons.md` immediately. Do not defer to session end.
+5. **Match found:** Increment occurrence count. Update the session dates. If the match is against a lesson from a previous session, this is a cross-session recurrence.
+6. **Escalation threshold (3+ occurrences across distinct sessions):**
+   - Surface: `⚠️ CROSS-SESSION PATTERN: [description]. Occurred in [N] sessions. This is structural, not incidental.`
    - If the pattern implicates a specific kernel rule → escalate to `eos-kernel-updater` with the pattern as evidence.
    - If the pattern implicates a skill behavior → escalate to F3 (which will apply its own anti-churn check before patching).
-   - Update pattern status to `escalated`.
+   - Update lesson status to `escalated`.
 
-### F4.3: Session End (Write)
+### F4.3: On Correction (Write Immediately)
 
-At session end (alongside voice-extract and kernel-updater triggers):
+Lessons are written to `tasks/lessons.md` at the moment of correction, not batched to session end. Cross-session learning is too important to lose to a crashed session.
 
-1. Collect all new and updated patterns from the current session.
-2. Write to Notion Spoke `PATTERN REGISTRY` section:
-   - New patterns: append with count=1, current session date, status=`tracking`.
-   - Updated patterns: increment count, append current session date, update status if escalated.
-   - Resolved patterns (user confirmed the fix worked): update status to `resolved`.
-3. This is a Tier 1 write — same class as decision-lock events. Patterns are state that must not be lost.
+1. Open `tasks/lessons.md`, append the new lesson or update the existing entry.
+2. Commit the file if in a git repo (Tier 1 — autonomous, no confirmation needed).
+3. Format: one lesson per table row, following the schema in F4.4.
 
-### F4.4: Pattern Entry Schema
+### F4.4: `tasks/lessons.md` Schema
 
+```markdown
+# Lessons
+
+Corrections and self-improving rules. Read at session start, written on every correction.
+
+| Pattern | Rule | Count | Sessions | Status |
+|---|---|---|---|---|
+| [what went wrong — concise] | [imperative: "Always X" or "Never Y"] | [N] | [date1, date2, ...] | tracking/escalated/resolved |
 ```
-| Pattern | Type | Count | Sessions | Status | Last Escalation |
-|---|---|---|---|---|---|
-| [description] | correction/contradiction/stall | [N] | [date1, date2, ...] | tracking/escalated/resolved | [date or —] |
-```
+
+- **Pattern:** The structural description of the mistake. Strip session-specific nouns.
+- **Rule:** The self-correcting imperative. This is what gets loaded as a behavioral constraint at session start.
+- **Count:** Total occurrences across all sessions.
+- **Sessions:** Dates when this pattern was observed.
+- **Status:** `tracking` (monitoring), `escalated` (3+ occurrences, flagged for structural fix), `resolved` (fix confirmed working).
 
 ### F4.5: Integration
 
-- **C5.3 (Outcome Accuracy):** Persistent prediction bias detected by C5.3 is registered as a pattern in F4 (type: `stall` — the system keeps making the same prediction error).
-- **F0 (Early Warning):** F0's "user correction clustering" signal is the primary input for F4 pattern matching.
-- **eos-kernel-updater:** Escalated patterns become evidence inputs for kernel update proposals.
+- **C5.3 (Outcome Accuracy):** Persistent prediction bias detected by C5.3 is registered as a lesson in F4 (type: stall — the system keeps making the same prediction error).
+- **F0 (Early Warning):** F0's "user correction clustering" signal is the primary input for F4 lesson matching.
+- **eos-kernel-updater:** Escalated lessons become evidence inputs for kernel update proposals.
+- **Notion (supplementary):** If Tier A is available, lessons are also written to Notion Spoke PATTERN REGISTRY as a backup. File is primary. Notion is supplementary.
 
 ---
 
 ## Cross-References
 
 - **eos-kernel-updater:** F3 anti-churn check queries kernel-updater's patch history. F4 escalates cross-session patterns to kernel-updater for structural review.
-- **eos-recall-router:** F4.1 uses `project_state` query type to load PATTERN REGISTRY from Notion.
-- **eos-memory-mgmt:** PATTERN REGISTRY is an Extended Section in the Notion Spoke (M5).
-- **eos-project-mgmt C5.3:** Persistent prediction bias feeds into F4 as a stall-type pattern.
+- **eos-memory-mgmt:** F4 operates independently of persistence tier — `tasks/lessons.md` is always available.
+- **eos-project-mgmt C5.3:** Persistent prediction bias feeds into F4 as a stall-type lesson.
