@@ -1,23 +1,52 @@
 ---
 name: eos-metacognition
-version: "v1.0.1"
-kernel_compat: "v20.3.0"
+version: "v1.1.0"
+kernel_compat: "v20.4.0"
 state: auto-monitor
-description: "Self-correction system — prediction calibration, rule friction auditing, autonomous rule patching. AUTO-TRIGGERS when 3 consecutive responses have LOW confidence, or limiter rejection rate exceeds 50%. Diagnostic steps (F1-F2) run autonomously at Tier 1 without asking. Rule patches (F3) require user confirmation at Tier 3. Also triggers when the user explicitly says 'run meta-cognition', 'self-check', 'audit the rules', or 'what's not working'. Always trigger when quantitative thresholds are met — do not wait for permission to diagnose."
+description: "Self-correction system — early warning detection, prediction calibration, rule friction auditing, autonomous rule patching. F0 (early warning) runs passively every response when goal is locked, detecting degradation patterns (confidence decay, assumption accumulation, CCI-G stall, trajectory churn, user correction clustering) before they hit diagnostic thresholds. Auto-escalates to F1 when 2+ signals detected. F1-F2 (diagnostic) AUTO-TRIGGER on threshold breach: 3 consecutive LOW confidence or limiter rejection rate > 50%. F3 (patching) requires user confirmation at Tier 3. Also triggers on explicit request ('run meta-cognition', 'self-check', 'audit the rules')."
 ---
 
 # Module F: Meta-Cognition (Self-Correction)
 
-**Trigger conditions (auto-fire, no permission needed for F1-F2):**
-- 3 consecutive responses with confidence = LOW during any active project work.
-- Limiter rejection rate > 50% (over last 10 proposals, or whole session if fewer).
+**Trigger conditions (auto-fire, no permission needed for F0-F2):**
+- F0 fires continuously (every response when goal is locked). Lightweight scan — no token overhead unless signal detected.
+- F1-F2 fire on threshold breach: 3 consecutive LOW confidence, or limiter rejection rate > 50%.
 - User explicit request.
 
 **Autonomy:**
+- F0 (early warning): **Tier 1 — runs autonomously.** Passive monitor. Surfaces signal only when pattern detected.
 - F1-F2 (diagnostic): **Tier 1 — runs autonomously.** The metrics triggered, the system responds.
 - F3 (patching): **Tier 3 — requires user confirmation.** Changing rules is irreversible.
 
 **Kernel rules in play:** Rule 2 (Generation Frame + self-audit), Rule 4 (Contradiction — including internal), Rule 6 (Autonomy Tiers), Rule 7 (Conflict Resolution — including internal).
+
+---
+
+## F0. Early Warning Detection (Tier 1 — passive monitor)
+
+Fires every response when a goal is locked. Detects degradation patterns before they hit F1-F2 thresholds. The point: intervene at signal, not at symptom.
+
+**Signals monitored (any single signal = advisory, 2+ = auto-escalate to F1):**
+
+| Signal | Detection | Weight |
+|---|---|---|
+| Confidence decay | 2 consecutive MEDIUM after prior HIGH, or HIGH → LOW in one step | 1 |
+| Assumption accumulation | 3+ open assumptions added in last 5 exchanges without any validation | 1 |
+| CCI-G stall | CCI-G unchanged for 5+ exchanges during active work (not idle) | 1 |
+| Trajectory churn | 2+ trajectory re-enumerations in 5 exchanges without convergence | 1 |
+| Constraint promotion failure | 2+ assumptions tested but none promoted or invalidated (simulation running but not resolving) | 1 |
+| User correction clustering | 2+ user corrections (Rule 7 miss flags) in 3 exchanges | 2 (double weight) |
+| Regression near-miss | Variable re-opened then re-locked to same value (Rule 5 churn) | 1 |
+
+**Behavior:**
+- **Single signal:** Log internally. No output. Continue monitoring.
+- **2+ signals (or 1 double-weight):** Surface in response: `⚠️ F0 EARLY WARNING: [signals detected]. Auto-escalating to F1 diagnostic.` Then run F1 immediately.
+- **Signal cleared:** If monitored signals drop below threshold, reset. No persistent flag.
+
+**Anti-noise:** F0 does NOT fire during:
+- First 3 exchanges of a session (insufficient data).
+- Builder mode (condensed simulation — confidence patterns differ).
+- User-initiated lens/sim-depth changes (transient disruption, not degradation).
 
 ---
 

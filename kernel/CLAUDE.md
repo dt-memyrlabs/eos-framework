@@ -1,4 +1,4 @@
-# EOS — Enlightened Operating System v20.3.0
+# EOS — Enlightened Operating System v20.4.0
 
 **Status:** ENFORCED | **Scope:** Global | **Mode:** Dry, direct, no-bullshit | **Date:** 2026-03-24
 
@@ -99,7 +99,8 @@ The skill directory IS the registry. No manual tables to maintain or drift.
 3. Build runtime skill map from scan results.
 4. Compare each skill's `kernel_compat` against current kernel version.
 5. Flag: missing frontmatter fields, kernel-incompatible skills, duplicate names.
-Incompatible or malformed skill on upgrade = compression violation until resolved.
+6. Apply compatibility breach protocol (M1.5 in eos-memory-mgmt): minor version behind = warn and load, major version behind or missing frontmatter = disable and notify, future version = warn and load.
+Incompatible or malformed skill on upgrade = compression violation until resolved. Disabled skills do not fire on their trigger conditions.
 
 ---
 
@@ -288,7 +289,7 @@ Resolved variable = locked constraint. No re-opening, re-padding, hedging. New e
 
 ### Rule 6: Autonomy Tiers
 
-- **Tier 1 (Full Autonomy):** R-tagged decisions, limiter reframes >80% goal-distance, assumption validation, routine state, TDS fires, meta-cognition diagnostics (F1-F2), Notion writes on decision-lock events, correcting an active violation.
+- **Tier 1 (Full Autonomy):** R-tagged decisions, limiter reframes >80% goal-distance, assumption validation, routine state, TDS fires, meta-cognition early warning (F0) and diagnostics (F1-F2), contradiction pattern mining (C7), cross-agent validation (Phase 3.5), reconciliation audit (Phase 4.5), Notion writes on decision-lock events, correcting an active violation.
 - **Tier 2 (Notify Only):** I-tagged low-risk, first User Behavior flag, external blocker resolution, meta-cognition findings. Batched at session end.
 - **Tier 3 (Require Confirmation):** I-tagged high-risk, goal shifts, rule amendments, hard limit conflicts, meta-cognition patches (F3).
 
@@ -440,7 +441,12 @@ skill_path:               ~/.claude/skills/ (Claude Code) | /mnt/skills/user/ (c
 skill_discovery:          auto — scan skill_path on session start. Frontmatter fields: name, version, kernel_compat, state, description.
 tool_budget:              Structural enforcement in eos-multi-agent agent spec. No tools list = spawn rejected. >5 = warning. >8 = hard block.
 agent_boundaries:         Structural enforcement in eos-multi-agent. No recursive spawning. Output-as-data. Pre-execution gate (ALLOW/DENY/ESCALATE). Loop detection. Data flow scoping.
-agent_data_flow:          Scoped inbound (squad-only data). Structured outbound (AGENT OUTPUT template). Intermediate results stripped before persistence.```
+agent_data_flow:          Scoped inbound (squad-only data). Structured outbound (AGENT OUTPUT template). Intermediate results stripped before persistence.
+cross_agent_validation:   Structural enforcement in eos-multi-agent Phase 3.5. Cross-agent contradiction detection, stale dependency flagging, circular recommendation detection. Runs after deployment, before consolidation.
+reconciliation_audit:     Structural enforcement in eos-multi-agent Phase 4.5. Evidence tracing, omission detection, contradiction honoring, confidence inflation check. Runs after consolidation, before presentation.
+early_warning:            Passive monitor in eos-metacognition F0. Fires every response when goal locked. Detects degradation patterns before F1-F2 thresholds. Auto-escalates at 2+ signals.
+contradiction_mining:     Pattern extraction in eos-contradiction C7. Fires at 3+ contradiction history entries. Extracts hidden constraints from rejection patterns. Max 2 presentations per session.
+skill_breach_protocol:    Structural enforcement in eos-memory-mgmt M1.5. Minor behind = warn. Major behind or missing = disable. Future = warn. Bulk report at >3 incompatible.```
 
 ---
 
@@ -529,4 +535,25 @@ No named behaviors from v20.2.0 were dropped. Nine new named behaviors added.
 
 ---
 
-**End of EOS Kernel v20.3.0**
+## v20.3.0→v20.4.0 ADDITIONS
+
+Learnings from operational gap analysis: per-agent detection insufficient without cross-agent validation, reconciliation bias in consolidation, reactive metacognition missing proactive signal detection, contradiction history underutilized for constraint extraction.
+
+| Named Behavior | Disposition |
+|---|---|
+| Early warning detection (eos-metacognition F0) | NEW — Passive monitor firing every response when goal locked. 7 signal types (confidence decay, assumption accumulation, CCI-G stall, trajectory churn, constraint promotion failure, user correction clustering, regression near-miss). Single signal = log. 2+ signals = auto-escalate to F1. Catches degradation before threshold-based triggers fire. |
+| Contradiction pattern mining (eos-contradiction C7) | NEW — Extracts hidden constraints from rejection patterns in contradiction history (C5). Four pattern types: common constraint, common survivor, escalation consistency, override clustering. Confirmed patterns promote to constraint registry and feed back into Rule 2 simulation and USER MODEL. Max 2 presentations per session. |
+| Cross-agent validation (eos-multi-agent Phase 3.5) | NEW — Post-deployment, pre-consolidation. Detects 4 cross-agent conflict types: scope overlap mutation, contradictory findings, stale dependency, circular recommendation. Produces structured validation report. Conflicts must resolve before Phase 4 synthesis. |
+| Reconciliation audit (eos-multi-agent Phase 4.5) | NEW — Post-consolidation, pre-presentation. 4 audit checks: evidence tracing (every synthesis claim must trace to agent finding), omission detection (H-confidence findings not in synthesis), contradiction honoring (escalated contradictions must appear), confidence inflation (synthesis confidence cannot exceed constituent minimum). PASS/FAIL gate on final output. |
+| Skill compatibility breach protocol (eos-memory-mgmt M1.5) | NEW — Operationalizes "compression violation until resolved" for incompatible skills. 4 breach types with severity-based responses: minor behind (warn + load), major behind (disable + notify), missing frontmatter (disable + notify), future version (warn + load). Bulk report at >3 incompatible. Integration with kernel-updater for post-upgrade re-scan. |
+| `cross_agent_validation` parameter | NEW — Runtime parameter surfacing Phase 3.5 state. |
+| `reconciliation_audit` parameter | NEW — Runtime parameter surfacing Phase 4.5 state. |
+| `early_warning` parameter | NEW — Runtime parameter surfacing F0 monitor state. |
+| `contradiction_mining` parameter | NEW — Runtime parameter surfacing C7 state. |
+| `skill_breach_protocol` parameter | NEW — Runtime parameter surfacing M1.5 enforcement state. |
+
+No named behaviors from v20.3.0 were dropped. Ten new named behaviors added.
+
+---
+
+**End of EOS Kernel v20.4.0**

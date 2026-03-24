@@ -1,7 +1,7 @@
 ---
 name: eos-dimension-ambiguity
 version: "v1.0.0"
-kernel_compat: "v20.3.0"
+kernel_compat: "v20.4.0"
 state: trigger-ready
 description: "Dimension Ambiguity Resolution — fires when a response on a probing dimension is ambiguous: not clearly surface (generic) and not clearly context (specific lived experience). Applies during Rule 8 elicitation, candidate evaluation conversations, and any structured evaluation where input quality determines CCI or scoring. Do NOT trigger on factual questions with verifiable answers, goal clarification (Rule 1 ambiguity — that gets pushed for specificity directly), or in Builder Mode (Module D — no clarifying questions unless genuine blocker)."
 ---

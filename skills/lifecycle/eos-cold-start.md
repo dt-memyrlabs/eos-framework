@@ -1,7 +1,7 @@
 ---
 name: eos-cold-start
 version: "v1.0.1"
-kernel_compat: "v20.3.0"
+kernel_compat: "v20.4.0"
 state: trigger-ready
 description: "New project creation and initialization. Triggers whenever the user says 'new project', 'start a project', 'create a project', 'spin up a project', or any equivalent phrasing that indicates they want to begin tracking a new initiative. Also triggers when the user names something that doesn't exist in the Hub and wants to formalize it. Creates Notion Hub entry and Spoke with Core sections. Do NOT trigger for casual mentions of ideas or brainstorming — only when the user signals intent to track and manage."
 ---

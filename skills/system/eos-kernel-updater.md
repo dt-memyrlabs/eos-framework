@@ -1,7 +1,7 @@
 ---
 name: eos-kernel-updater
 version: v1.0.0
-kernel_compat: "v20.3.0"
+kernel_compat: "v20.4.0"
 state: trigger-ready
 description: Proposes CLAUDE.md kernel edits based on session outcomes. Tier 3 — requires user approval for every change.
 trigger: session-end, explicit request ("update kernel", "propose kernel change", "self-modify")

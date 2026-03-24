@@ -1,7 +1,7 @@
 ---
 name: eos-memex
 version: "v1.1.1"
-kernel_compat: "v20.3.0"
+kernel_compat: "v20.4.0"
 state: trigger-ready
 description: >
   Indexed experience memory for long-horizon EOS sessions. Implements the Memex

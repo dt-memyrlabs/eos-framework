@@ -2,6 +2,30 @@
 
 All notable changes to EOS are documented here.
 
+## v20.4.0 — 2026-03-24
+
+### Added
+- **Early warning detection (eos-metacognition F0)**: Passive monitor firing every response when goal is locked. 7 signal types: confidence decay, assumption accumulation, CCI-G stall, trajectory churn, constraint promotion failure, user correction clustering, regression near-miss. Single signal = log internally. 2+ signals = auto-escalate to F1 diagnostic. Anti-noise exclusions for first 3 exchanges, builder mode, and lens/sim-depth changes.
+- **Contradiction pattern mining (eos-contradiction C7)**: Auto-extracts hidden constraints from rejection patterns in contradiction history (C5). Four pattern types: common constraint, common survivor, escalation consistency, override clustering. Confirmed patterns promote to constraint registry and feed back into Rule 2 simulation, USER MODEL, and F0 early warning resolution. Max 2 presentations per session.
+- **Cross-agent validation (eos-multi-agent Phase 3.5)**: Post-deployment, pre-consolidation structural gate. Detects 4 cross-agent conflict types: scope overlap mutation (two agents mutated same resource), contradictory findings (same subject, opposite claims), stale dependency (Agent A assumes state that Agent B invalidated), circular recommendation (mutual precondition deadlock). Produces structured validation report. Conflicts must resolve before Phase 4 synthesis.
+- **Reconciliation audit (eos-multi-agent Phase 4.5)**: Post-consolidation, pre-presentation structural gate. 4 audit checks: evidence tracing (every synthesis claim must trace to agent finding), omission detection (H-confidence findings missing from synthesis), contradiction honoring (escalated contradictions must appear with resolution), confidence inflation (synthesis confidence cannot exceed constituent minimum). PASS/FAIL gate.
+- **Skill compatibility breach protocol (eos-memory-mgmt M1.5)**: Operationalizes "compression violation until resolved" for incompatible skills. 4 breach types: minor version behind (warn + load), major version behind (disable + notify), missing frontmatter (disable + notify), future version (warn + load). Bulk compatibility report at >3 incompatible. Integration with eos-kernel-updater for post-upgrade re-scan.
+- `cross_agent_validation`, `reconciliation_audit`, `early_warning`, `contradiction_mining`, `skill_breach_protocol` runtime parameters
+- Skill discovery protocol extended with breach protocol (step 6)
+
+### Changed
+- **eos-metacognition v1.0.1 → v1.1.0**: F0 early warning detection added. Trigger conditions updated to include F0 passive monitoring.
+- **eos-contradiction v1.0.1 → v1.1.0**: C7 pattern mining added. Extracts hidden constraints from rejection history.
+- **eos-multi-agent v1.2.0 → v1.3.0**: Phase 3.5 (cross-agent validation) and Phase 4.5 (reconciliation audit) added. Lifecycle expanded from 5 to 7 phases.
+- **eos-memory-mgmt v1.2.0 → v1.3.0**: M1.5 skill compatibility breach protocol added between M1.3 and M1.4.
+- **Rule 6 (Autonomy Tiers)**: Tier 1 expanded to include F0, C7, Phase 3.5, and Phase 4.5 autonomous operations.
+- All 18 skill files: `kernel_compat` bumped to v20.4.0.
+
+### Learned from
+Operational gap analysis of v20.3.0: per-agent loop detection insufficient without cross-agent validation, consolidation reconciliation vulnerable to parent bias, metacognition reactive-only (threshold-based) missing proactive signal detection, contradiction history collecting data but not extracting patterns, skill compatibility stated as violation but had no operational remediation protocol.
+
+---
+
 ## v20.3.0 — 2026-03-24
 
 ### Added

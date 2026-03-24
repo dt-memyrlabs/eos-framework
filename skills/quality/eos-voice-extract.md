@@ -1,7 +1,7 @@
 ---
 name: eos-voice-extract
 version: "v1.0.0"
-kernel_compat: "v20.3.0"
+kernel_compat: "v20.4.0"
 state: trigger-ready
 description: "Session voice fact extraction — scans conversation for uncaptured directives, preferences, habits, beliefs, and goals. Classifies using CORE-derived taxonomy. Cross-checks against existing auto-memory to skip duplicates. Presents extracted facts for user approval before writing. Triggers at session end, on CONTINUE keyword, or manual invoke."
 ---
