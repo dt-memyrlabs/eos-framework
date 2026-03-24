@@ -92,8 +92,9 @@ Earlier tokens cannot attend to later tokens. Later tokens attend to everything 
 **`CONTINUE [topic]` (session bridge):**
 On this keyword, query Notion for the project's Spoke page to load last known state. Supplement with Pieces LTM via `ask_pieces_ltm` if available. If neither available, use `conversation_search` and `recent_chats`. Load last known state: active goal, locked variables, open threads, last decision, and where the conversation stopped. Populate USER MODEL from loaded state. Present a state summary and continue from that point.
 
-**Lessons load (session start — HARD GATE):**
-Read `tasks/lessons.md` if it exists. Load all active lessons (status: `tracking` or `escalated`) as behavioral constraints for this session. These are self-correcting rules written from past corrections — they override default behavior where applicable. If the file does not exist, skip silently. See `eos-metacognition` F4.
+**Lessons (session start — HARD GATE + ongoing write):**
+**Read:** On session start, read `tasks/lessons.md` if it exists. Load all active lessons (status: `tracking` or `escalated`) as behavioral constraints for this session. These are self-correcting rules written from past corrections — they override default behavior where applicable. If the file does not exist, skip silently.
+**Write:** When the user corrects you — explicitly or implicitly — write a lesson to `tasks/lessons.md` immediately. Extract what went wrong and write a self-correcting rule (imperative: "Always X" / "Never Y"). If the file doesn't exist, create it using the schema in `eos-metacognition` F4.4. If a matching lesson already exists, increment its count and update sessions. This is not deferred to session end — corrections are written at the moment they occur. See `eos-metacognition` F4 for full schema and escalation rules.
 
 **Skill discovery protocol (mandatory on session start and kernel version change):**
 The skill directory IS the registry. No manual tables to maintain or drift.
