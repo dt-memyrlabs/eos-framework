@@ -2,6 +2,33 @@
 
 All notable changes to EOS are documented here.
 
+## v20.5.0 — 2026-03-25
+
+### Added
+- **Cross-session lessons (eos-metacognition F4)**: File-based self-correcting rules via `tasks/lessons.md`. Written immediately on correction, loaded at session start as behavioral constraints. 3+ cross-session occurrences escalates to F3 or kernel-updater. No external dependency.
+- **Patch churn detection (eos-kernel-updater Step 1.5)**: 3+ patches on same rule triggers STRUCTURAL_REVIEW instead of incremental patch. Loads per-rule patch history from Notion.
+- **F3 anti-churn check (eos-metacognition F3)**: 2+ prior patches on same rule = escalate to STRUCTURAL_REVIEW.
+- **Constraint minimization query (eos-constraint-graph G2.6)**: Minimum constraint relaxation set for goal. Integrates with sim-depth 6 Monte Carlo and C7 Limiter Analysis.
+- **Outcome tracking wiring (eos-project-mgmt C5)**: Auto-captures predictions, matches outcomes, runs accuracy analysis at 5+ entries.
+- **M2 prediction/outcome events (eos-memory-mgmt M2)**: Two new decision-lock event types.
+- `cross_session_lessons`, `outcome_tracking`, `patch_churn_detection` runtime parameters
+
+### Changed
+- **Cross-layer voice dedup (eos-voice-extract V2)**: Deduplication queries all populated layers before writing.
+- **C7 minimization integration (eos-project-mgmt C7)**: Limiter Analysis queries G2.6 minimization when constraint graph is active.
+- **PATTERN REGISTRY**: Demoted from Notion Spoke to supplementary. Primary store is `tasks/lessons.md`.
+- **Changelog removed from kernel**: Moved to Notion (EOS Changelog page). Kernel was carrying ~130 lines of history that consumed tokens every session without influencing generation.
+
+## v20.4.0 — 2026-03-24
+
+### Added
+- **Early warning detection (eos-metacognition F0)**: Passive monitor firing every response when goal locked. 7 signal types. 2+ signals auto-escalate to F1.
+- **Contradiction pattern mining (eos-contradiction C7)**: Extracts hidden constraints from rejection patterns. Four pattern types. Max 2 presentations per session.
+- **Cross-agent validation (eos-multi-agent Phase 3.5)**: Post-deployment, pre-consolidation. 4 cross-agent conflict types.
+- **Reconciliation audit (eos-multi-agent Phase 4.5)**: Post-consolidation, pre-presentation. 4 audit checks. PASS/FAIL gate.
+- **Skill compatibility breach protocol (eos-memory-mgmt M1.5)**: 4 breach types with severity-based responses.
+- `cross_agent_validation`, `reconciliation_audit`, `early_warning`, `contradiction_mining`, `skill_breach_protocol` runtime parameters
+
 ## v20.3.0 — 2026-03-24
 
 ### Added
@@ -87,9 +114,4 @@ No named behaviors were silently dropped. Full audit table in kernel.
 
 ---
 
-## Known Technical Debt
-
-| Issue | Affected Skills | Severity | Target |
-|-------|----------------|----------|--------|
-| `create_pieces_memory` used as primary write target (should be Notion per v20) | eos-collaboration, eos-goal-framing, eos-project-mgmt, eos-cold-start | Medium | v20.2.0 |
-| `kernel_compat: "v20.0.0"` on 15 skills (kernel is v20.1.0) | All except recall-router, fact-check, voice-extract | Low | v20.2.0 |
+*Technical debt items from earlier versions have been resolved. Pieces write targets fixed in v20.2.0. Skill kernel_compat aligned in v20.3.0.*

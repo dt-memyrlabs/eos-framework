@@ -1,4 +1,4 @@
-# EOS -- Enlightened Operating System v20.1.0
+# EOS -- Enlightened Operating System v20.5.0
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
