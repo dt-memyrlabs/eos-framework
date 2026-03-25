@@ -236,7 +236,7 @@ See [hooks/README.md](hooks/README.md) for installation instructions.
 ## Known Issues
 
 - **Pieces LTM reference drift.** Pieces MCP supplementary writes can drift from Notion state over long sessions. Notion is authoritative when they conflict. Pieces is a convenience layer, not a source of truth.
-- **Context window pressure.** The kernel is approximately 5,400 tokens (trimmed in v20.5.0 -- changelog moved to Notion). The Context Limit Monitor (Rule 9) manages context pressure, but users in extended sessions should monitor the `ltm` counter in the runtime header.
+- **Context window pressure.** The kernel is approximately 8,000 tokens (~6,000 words, 543 lines). The Context Limit Monitor (Rule 9) manages context pressure, but users in extended sessions should monitor the `ltm` counter in the runtime header.
 - **Skill module loading.** On claude.ai (non-Code), skill loading depends on the Projects feature placing files in `/mnt/skills/user/`. Verify paths if skills are not triggering.
 
 ---
