@@ -1,7 +1,7 @@
 ---
 name: eos-kernel-updater
-version: v1.0.0
-kernel_compat: "v20.3.0"
+version: v1.1.0
+kernel_compat: "v20.5.0"
 state: trigger-ready
 description: Proposes CLAUDE.md kernel edits based on session outcomes. Tier 3 — requires user approval for every change.
 trigger: session-end, explicit request ("update kernel", "propose kernel change", "self-modify")
@@ -30,6 +30,16 @@ Review the current session for:
 6. **Rule conflicts** — did any rules contradict each other during this session?
 7. **Memory gaps** — did you lack context that should have been in the USER MODEL?
 
+## Step 1.5: Load Patch History
+
+Before classifying proposals, query Notion for prior `Kernel Update Session` log entries. Build a per-rule patch count:
+
+1. For each rule/section in CLAUDE.md, count how many times it has been the target of an approved patch across all logged sessions.
+2. Store as working context: `patch_history: { "Rule 2": 3, "Identity/sarcasm": 1, ... }`
+3. This count is used in Step 2 (STRUCTURAL_REVIEW detection) and shared with `eos-metacognition` F3 (anti-churn check).
+
+If Notion is unavailable (Tier C), skip — patch history is unknown. Proceed with standard classification but note: `⚠️ Patch history unavailable — churn detection disabled for this session.`
+
 ## Step 2: Classify Proposals
 
 For each piece of evidence, classify:
@@ -39,6 +49,7 @@ For each piece of evidence, classify:
 - **PARAM_CHANGE** — runtime parameter default needs updating (evidence: user consistently overrides a default)
 - **IDENTITY_UPDATE** — generation target needs adding or modifying (evidence: output pattern consistently misaligned)
 - **USER_MODEL_UPDATE** — USER MODEL template needs new field (evidence: repeated context gap)
+- **STRUCTURAL_REVIEW** — rule has been patched 3+ times across sessions (from Step 1.5 patch history). Incremental patching isn't working — the rule needs structural redesign, not another tune. Also triggered when `eos-metacognition` F3 escalates with anti-churn flag.
 - **NO_CHANGE** — evidence doesn't warrant kernel modification (most common outcome)
 
 ## Step 3: Generate Proposals
@@ -68,6 +79,26 @@ Impact:   [which other rules or behaviors this interacts with]
 APPROVE / REJECT / MODIFY?
 ```
 
+For `STRUCTURAL_REVIEW` classifications, use this format instead:
+
+```
+STRUCTURAL REVIEW REQUIRED
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+Rule:        [rule name / section]
+Patch count: [N] across [M] sessions
+Patch history:
+  - [date]: [what changed]
+  - [date]: [what changed]
+  ...
+Pattern:     [what the patches have in common — are they all trying to fix the same underlying issue?]
+Assessment:  This rule has been tuned [N] times. Tuning isn't working. The rule needs structural redesign.
+Proposed direction: [high-level architectural recommendation — not a text diff]
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+APPROVE REDESIGN / REJECT / DEFER?
+```
+
+On APPROVE REDESIGN: The redesign is a separate, dedicated effort — not an inline patch. Log the approval and the proposed direction. The actual redesign happens as a focused task, not a session-end amendment.
+
 ## Step 4: Present to User
 
 - Present proposals one at a time
@@ -87,6 +118,8 @@ Approved: [count]
 Rejected: [count]
 Modified: [count]
 Changes applied: [list of section + change type]
+Structural reviews: [count, with rule names]
+Patch counts updated: [per-rule counts after this session]
 ```
 
 ## Constraints

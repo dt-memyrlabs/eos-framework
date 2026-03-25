@@ -1,7 +1,7 @@
 ---
 name: eos-constraint-graph
-version: "v1.0.0"
-kernel_compat: "v20.3.0"
+version: "v1.1.0"
+kernel_compat: "v20.5.0"
 state: trigger-ready
 description: "Graph-based constraint and decision memory. Replaces linear tracking of locked variables, assumptions, and decisions with a queryable dependency graph. Nodes are variables, assumptions, decisions, and constraints. Edges are typed relationships (depends-on, validates, contradicts, derived-from). Triggers when goal is locked and first variable is locked, or on explicit request. Enables cascade unlocking (Rule 5), dependency-aware simulation (Rule 2), and impact analysis queries. Do NOT trigger before goal lock — graph requires at least one locked variable to initialize."
 ---
@@ -85,6 +85,40 @@ On every node addition (G2.1):
 2. Obvious contradictions (same variable, opposite values) are auto-flagged.
 3. Subtle contradictions (tension but not direct opposition) are stated inline for user assessment.
 4. Any `contradicts` edge triggers Rule 4 immediately.
+
+### G2.6: Minimization Query
+**Trigger:** User asks "what's the minimum to unlock", "what constraints block the goal", "minimum relaxation set", "shortest path to unblocking". Also callable by `eos-project-mgmt` C7 (Limiter Analysis) as structured input. Auto-fires at sim-depth 6+ (Monte Carlo) when multiple constraint relaxations are being evaluated.
+
+**Purpose:** Given the goal node and current blocked/constrained paths, identify the minimum set of constraints whose relaxation would open a viable path to the goal.
+
+**Algorithm:**
+1. Identify all paths from current state to goal node.
+2. For each path, collect the set of `constraint` nodes (Hard, Structural, Assumed) that block it.
+3. Compute minimum hitting set — the smallest set of constraints that, if relaxed, would unblock at least one complete path.
+4. If multiple minimum sets of equal size exist, rank by:
+   a. Classification softness (Assumed > Structural > Hard — prefer relaxing softer constraints).
+   b. Cascade risk (prefer constraints with fewer downstream `depends-on` edges).
+   c. Goal-distance impact (prefer constraints whose relaxation produces largest estimated CCI-G gain).
+
+**Output:**
+```
+MINIMIZATION QUERY RESULT
+━━━━━━━━━━━━━━━━━━━━━━━━
+Goal: [goal node]
+Blocked paths: [count]
+Minimum relaxation set ([N] constraints):
+  1. [constraint] | [classification] | cascade risk: [N nodes] | goal-distance impact: [estimate]
+  2. [constraint] | ...
+Alternative sets (if multiple minimums exist):
+  Set B: [constraints] | trade-off: [what's different]
+━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+**Integration with sim-depth 6 (Monte Carlo):** G2.6 is the structured query that Monte Carlo constraint sweep (Rule 2, sim-depth 6) delegates to when `eos-constraint-graph` is active. Monte Carlo sweeps individual constraints; G2.6 finds the optimal combination.
+
+**Integration with C7 (Limiter Analysis):** C7 enumerates remaining constraints and challenges Assumed/Structural ones individually. G2.6 provides the optimization primitive: instead of challenging constraints one at a time, C7 can query G2.6 for the minimum set and focus challenge energy there.
+
+Autonomy: Tier 1 (query is read-only — no graph mutations).
 
 ---
 
@@ -177,6 +211,6 @@ When active, extend runtime header:
 - **Rule 4 (Contradiction):** `contradicts` edges are Rule 4 triggers.
 - **Rule 5 (Regression Lock):** Lock/unlock operates on graph nodes. Cascade unlocking is the graph-native extension.
 - **Rule 3 (CCI):** Graph health feeds CCI-G (G4).
-- **eos-project-mgmt:** Decisions (C2) create graph nodes. Limiter Analysis (C7) operates on constraint nodes.
+- **eos-project-mgmt:** Decisions (C2) create graph nodes. Limiter Analysis (C7) operates on constraint nodes. C7 uses G2.6 minimization query to focus constraint challenges on the minimum relaxation set.
 - **eos-memex:** Large graphs compress per Memex protocol.
 - **eos-memory-mgmt:** Graph state writes to Notion follow M4 writeback policy.

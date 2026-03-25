@@ -1,7 +1,7 @@
 ---
 name: eos-project-mgmt
-version: "v1.1.1"
-kernel_compat: "v20.3.0"
+version: "v1.2.0"
+kernel_compat: "v20.5.0"
 state: trigger-ready
 description: "Full project management: assumption tracking, decision logging, blocker management, limiter analysis, convergence. Triggers when a project has a locked goal AND CCI-G is at or above 50%. Stays active while the project is being discussed. Also triggers when the user references an active project by name, asks about project status, discusses blockers, makes decisions that need tracking, or works toward convergence. Handles cross-project priority conflicts when multiple projects are active. Do NOT trigger during initial goal framing (that's eos-goal-framing) or pure build execution (that's eos-builder)."
 ---
@@ -61,14 +61,65 @@ When resources or time conflict between projects:
 Priority is tracked per project in Pieces memory or Notion if the user has set it up.
 
 ## C5. Outcome Feedback Loop
-When a decision or build is deployed, log:
-- Predicted outcome (what simulation expected)
-- Actual outcome (what happened)
-- Calibration: match or mismatch
 
-**Pattern detection:**
-- 2 mismatches of same type → propose amendment to approach
-- 3 mismatches of same type → mandatory amendment
+### C5.1: Prediction Capture (Tier 1 — autonomous)
+
+When a prediction or recommendation is made during project work, auto-log it to the Notion Spoke `OUTCOME LOG` section.
+
+**Trigger events:**
+- Recommendation selected after trajectory enumeration (Rule 2) — the predicted outcome of the chosen path.
+- I-tagged decision made (C2) — the expected result that justified the decision.
+- Limiter reframe accepted (C7) — the predicted CCI-G gain from relaxing the constraint.
+- Simulation outcome stated at any sim-depth — any explicit claim about what will happen.
+
+**Log format (append to OUTCOME LOG):**
+```
+[date] | PREDICTION | [decision/recommendation] | predicted: [expected outcome] | status: OPEN
+```
+
+### C5.2: Outcome Capture (Tier 2 — notify user)
+
+When the user confirms or refutes a prior prediction:
+
+**Detection signals:**
+- User says "that worked", "that failed", "the result was", "turns out", or references a prior decision with outcome information.
+- Project state change that resolves a prediction (e.g., variable locked based on predicted outcome, or variable unlocked because prediction was wrong).
+
+**On detection:**
+1. Match the outcome to an OPEN prediction in the OUTCOME LOG (by subject/decision).
+2. Update the log entry:
+```
+[date] | OUTCOME | [decision] | predicted: [X] | actual: [Y] | delta: [match/partial/miss] | reason: [what was different]
+```
+3. Notify: `Outcome logged: [decision] — predicted [X], actual [Y]. [match/miss].`
+
+### C5.3: Accuracy Analysis (Tier 2 — notify user)
+
+**Auto-trigger:** When OUTCOME LOG accumulates 5+ resolved entries for the current project, or on explicit request ("how accurate have I been", "prediction accuracy", "outcome review").
+
+**Analysis:**
+1. Calculate overall match rate: [matches] / [total resolved].
+2. Categorize misses by type:
+   - Optimistic (predicted better than actual)
+   - Pessimistic (predicted worse than actual)
+   - Directional (predicted wrong category of outcome entirely)
+3. Pattern detection:
+   - 2 mismatches of same type → propose amendment to approach.
+   - 3 mismatches of same type → mandatory amendment (Tier 3 confirmation).
+4. Feed persistent bias patterns into `eos-metacognition` F4 (cross-session pattern registry) if the prediction bias persists across sessions.
+
+**Output:**
+```
+PREDICTION ACCURACY REVIEW
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+Total predictions: [N]
+Resolved: [M] | Open: [K]
+Match rate: [X]%
+Bias: [optimistic/pessimistic/none] ([count] of [type])
+Pattern: [description or "no consistent pattern"]
+Recommendation: [amendment or "calibration acceptable"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
 
 ## C6. User Behavior Protocol
 Monitor for (flag once per session, no more):
@@ -86,6 +137,7 @@ Persistent pattern: escalate to Tier 3.
 Process:
 1. Enumerate all remaining constraints preventing convergence.
 2. Classify each (Hard/Structural/Assumed).
+2.5. If `eos-constraint-graph` is active, run G2.6 minimization query on the remaining constraints. Use the minimization result to prioritize which constraints to challenge — challenge the minimum relaxation set first.
 3. Challenge Assumed and Structural constraints with specific reframes.
 4. Respect Hard constraints (evidence verified).
 5. Score reframes by goal-distance impact.

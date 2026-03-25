@@ -1,7 +1,7 @@
 ---
 name: eos-multi-agent
-version: "v1.2.0"
-kernel_compat: "v20.3.0"
+version: "v1.3.0"
+kernel_compat: "v20.4.0"
 state: trigger-ready
 trigger: When a task requires parallel execution across multiple independent workstreams, or when the user explicitly requests multi-agent orchestration.
 description: >
@@ -15,10 +15,10 @@ description: >
   must operate under goal lock, constraint graph, or trajectory context.
 ---
 
-# EOS Multi-Agent Skill v1.2.0
+# EOS Multi-Agent Skill v1.3.0
 
 ## Purpose
-Parallel agent orchestration with structured lifecycle and defense-in-depth security at agent boundaries. Five phases: pre-flight, recon, decomposition, deployment, consolidation.
+Parallel agent orchestration with structured lifecycle, defense-in-depth security at agent boundaries, cross-agent conflict detection, and evidence-based reconciliation auditing. Seven phases: pre-flight, recon, decomposition, deployment, cross-agent validation, consolidation, reconciliation audit.
 
 **Kernel rules in play:** Rule 6 (Autonomy Tiers, subagent ceiling, execution boundaries), Rule 2 (Generation Frame), Rule 4 (Contradiction — cross-agent), Rule 5 (Regression Lock).
 
@@ -253,6 +253,56 @@ This is not a convention. The `Agent` tool is excluded from every subagent tool 
 
 ---
 
+## Phase 3.5: CROSS-AGENT VALIDATION
+
+Runs after all agents complete (or timeout), before consolidation. Detects inter-agent conflicts that per-agent loop detection cannot catch.
+
+**Purpose:** Per-agent loop detection (Phase 3) catches an agent repeating itself. It cannot catch Agent A and Agent B reaching contradictory conclusions about the same resource, or Agent A's output depending on a state that Agent B just invalidated. Phase 3.5 catches these cross-agent failure modes.
+
+### Cross-Agent Conflict Detection
+
+After collecting all agent outputs, before entering Phase 4 synthesis:
+
+| Conflict Type | Detection | Response |
+|---|---|---|
+| **Scope overlap mutation** | Two agents modified the same file/resource (detected by comparing agent scopes against actual tool call targets in structured output) | Hard stop on synthesis for affected resource. Flag: "Agents [X] and [Y] both mutated [resource]. Reconcile before synthesis." |
+| **Contradictory findings** | Agent A's finding directly contradicts Agent B's finding on the same subject (same subject, opposite claim) | Escalate per Rule 4. Do not silently pick one. Both findings enter Phase 4 with `CONTESTED` tag. |
+| **Stale dependency** | Agent A's recommendation depends on a state that Agent B's output shows has changed | Flag dependency: "Agent [A] assumes [state X], but Agent [B] found [state Y]. Agent [A]'s recommendation may be invalid." Re-simulation required for Agent A's recommendation. |
+| **Circular recommendation** | Agent A recommends action that creates a precondition for Agent B, while Agent B recommends action that creates a precondition for Agent A | Flag circular dependency. Neither recommendation can proceed independently. Parent must sequence or redesign. |
+
+### Validation Protocol
+
+1. **Collect** all AGENT OUTPUT blocks from completed agents.
+2. **Extract** subject-claim pairs from each agent's FINDINGS section.
+3. **Cross-compare** all subject-claim pairs. Same subject + different claim = contradiction flag.
+4. **Check** each agent's RECOMMENDATIONS for implicit state assumptions. Compare against other agents' findings.
+5. **Report** conflicts in a structured block before Phase 4 begins:
+
+```
+CROSS-AGENT VALIDATION
+======================
+Conflicts: [N found / none]
+- [Conflict 1]: [type] | Agents: [X] vs [Y] | Subject: [what] | Resolution: [pending/auto-resolved]
+- [Conflict 2]: ...
+
+Cleared for synthesis: [yes / no — resolve conflicts first]
+```
+
+6. If **no conflicts**: proceed to Phase 4.
+7. If **conflicts detected**: resolve each before synthesis. Resolution options:
+   - **Parent adjudicates** (default): parent evaluates both sides, picks winner with documented reasoning.
+   - **Re-run affected agent** with corrected input (if stale dependency).
+   - **Escalate to user** (if conflict cannot be resolved from available evidence).
+
+### Autonomy
+
+- Conflict detection: Tier 1 (autonomous).
+- Conflict resolution by parent adjudication: Tier 2 (notify).
+- Agent re-run: Tier 2 (budget impact — notify).
+- Escalation to user: Tier 3.
+
+---
+
 ## Phase 4: CONSOLIDATE
 
 Collect results from all agents. Produce a unified output. This is not optional — parallel outputs without consolidation are not a deliverable.
@@ -313,6 +363,47 @@ SYNTHESIS:
 - If contradictions remain unresolved → present to user for moderation (Rule 4).
 - If coverage < 80% → flag and recommend re-run with adjusted decomposition.
 - If all agents failed → no synthesis attempt. Report failure modes only.
+
+---
+
+## Phase 4.5: RECONCILIATION AUDIT
+
+Runs after Phase 4 synthesis, before the consolidated output is presented as a deliverable. Verifies that the synthesis actually reflects what the agents found — not what the parent assumed or wanted.
+
+**Purpose:** The output-as-data principle (Phase 4) requires the parent to reconcile agent findings. But reconciliation can silently drift: a parent that already has a preferred answer may unconsciously filter agent findings to support it. Phase 4.5 is the structural check against reconciliation bias.
+
+### Audit Protocol
+
+For each recommendation in the SYNTHESIS section of the Consolidation Report:
+
+| Check | Method | Failure |
+|---|---|---|
+| **Evidence tracing** | Every claim in the synthesis must trace to at least one agent finding with H or M confidence. Claims without traceable evidence = unsupported. | Flag: "Synthesis claim [X] has no agent evidence basis. Source: parent inference, not agent finding." |
+| **Omission detection** | Compare agent findings (all H/M confidence) against synthesis. Any H-confidence finding not addressed in synthesis = omission. | Flag: "Agent [X] finding [Y] (HIGH confidence) not reflected in synthesis. Intentional exclusion or oversight?" |
+| **Contradiction honoring** | Phase 3.5 contradictions that were escalated must appear in the synthesis with their resolution. Contradictions that vanish in synthesis = silent pick. | Flag: "Contradiction between Agents [X] and [Y] on [subject] was escalated but not addressed in synthesis." |
+| **Confidence inflation** | Synthesis confidence cannot exceed the minimum confidence of its constituent findings. A synthesis built on M-confidence findings cannot claim H confidence. | Flag: "Synthesis claims HIGH confidence but relies on findings at MEDIUM: [list]." |
+
+### Output
+
+```
+RECONCILIATION AUDIT
+====================
+Claims traced: [X/Y] | Omissions: [N] | Silent picks: [N] | Confidence valid: [yes/no]
+
+Issues:
+- [Issue 1]: [type] | [detail]
+
+Audit result: PASS / FAIL — [reason]
+```
+
+**PASS:** Synthesis proceeds to presentation.
+**FAIL:** Synthesis revised to address flagged issues before presentation. Revision is Tier 1 (parent corrects own output). If revision changes the recommendation, notify user that the audit altered the conclusion.
+
+### Autonomy
+
+- Audit execution: Tier 1 (autonomous — self-check on own output).
+- Synthesis revision on audit failure: Tier 1 (correcting own work).
+- Notification when audit changes recommendation: Tier 2 (notify).
 
 ---
 

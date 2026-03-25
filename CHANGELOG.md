@@ -2,32 +2,56 @@
 
 All notable changes to EOS are documented here.
 
-## v20.5.0 — 2026-03-25
+## v20.5.0 — 2026-03-24
 
 ### Added
-- **Cross-session lessons (eos-metacognition F4)**: File-based self-correcting rules via `tasks/lessons.md`. Written immediately on correction, loaded at session start as behavioral constraints. 3+ cross-session occurrences escalates to F3 or kernel-updater. No external dependency.
-- **Patch churn detection (eos-kernel-updater Step 1.5)**: 3+ patches on same rule triggers STRUCTURAL_REVIEW instead of incremental patch. Loads per-rule patch history from Notion.
-- **F3 anti-churn check (eos-metacognition F3)**: 2+ prior patches on same rule = escalate to STRUCTURAL_REVIEW.
-- **Constraint minimization query (eos-constraint-graph G2.6)**: Minimum constraint relaxation set for goal. Integrates with sim-depth 6 Monte Carlo and C7 Limiter Analysis.
-- **Outcome tracking wiring (eos-project-mgmt C5)**: Auto-captures predictions, matches outcomes, runs accuracy analysis at 5+ entries.
-- **M2 prediction/outcome events (eos-memory-mgmt M2)**: Two new decision-lock event types.
+- **Cross-session lessons (eos-metacognition F4)**: File-based via `tasks/lessons.md`. Self-correcting rules written immediately on correction, loaded at session start as behavioral constraints. 3+ cross-session occurrences escalates to F3 or kernel-updater. No external dependency — works without Notion. Notion PATTERN REGISTRY retained as supplementary backup.
+- **Patch churn detection (eos-kernel-updater Step 1.5)**: Loads per-rule patch history from Notion kernel update log before classifying proposals. 3+ patches on same rule triggers STRUCTURAL_REVIEW classification — proposes architectural redesign direction instead of another text diff.
+- **F3 anti-churn check (eos-metacognition F3)**: Before proposing any rule patch, queries patch history. 2+ prior patches on same rule = escalate to kernel-updater STRUCTURAL_REVIEW instead of proposing incremental patch. Prevents metacognition from contributing to churn.
+- **Constraint minimization query (eos-constraint-graph G2.6)**: Finds minimum set of constraints to relax to reach goal. Ranks by classification softness, cascade risk, goal-distance impact. Integrates with sim-depth 6 Monte Carlo and C7 Limiter Analysis. Tier 1 read-only query.
+- **PATTERN REGISTRY Spoke section (eos-memory-mgmt M5)**: Demoted to supplementary backup. Primary store is `tasks/lessons.md`.
+- **M2 prediction/outcome events (eos-memory-mgmt M2)**: Two new decision-lock event types for OUTCOME LOG writes.
 - `cross_session_lessons`, `outcome_tracking`, `patch_churn_detection` runtime parameters
+- **`tasks/lessons.md`**: New file. Schema for cross-session lesson tracking. Read by F4 at session start, written on every correction.
 
 ### Changed
-- **Cross-layer voice dedup (eos-voice-extract V2)**: Deduplication queries all populated layers before writing.
-- **C7 minimization integration (eos-project-mgmt C7)**: Limiter Analysis queries G2.6 minimization when constraint graph is active.
-- **PATTERN REGISTRY**: Demoted from Notion Spoke to supplementary. Primary store is `tasks/lessons.md`.
-- **Changelog removed from kernel**: Moved to Notion (EOS Changelog page). Kernel was carrying ~130 lines of history that consumed tokens every session without influencing generation.
+- **eos-metacognition v1.1.0 → v1.2.0**: F4 rewritten — file-based `tasks/lessons.md` replaces Notion PATTERN REGISTRY as primary store. Lessons written immediately on correction, not batched. F3 anti-churn check added. Description and autonomy section updated.
+- **eos-project-mgmt v1.1.1 → v1.2.0**: C5 expanded from 8-line stub to full operational outcome tracking (C5.1 prediction capture, C5.2 outcome capture, C5.3 accuracy analysis). C7 Limiter Analysis enhanced with G2.6 minimization query integration.
+- **eos-constraint-graph v1.0.0 → v1.1.0**: G2.6 minimization query added. Cross-reference to C7 updated.
+- **eos-voice-extract v1.0.0 → v1.1.0**: V2 deduplication upgraded from auto-memory-only to cross-layer (checks auto-memory, Notion, Pieces via recall-router cross_layer query). Four outcome types: exact duplicate, evolution, cross-layer duplicate, new.
+- **eos-kernel-updater v1.0.0 → v1.1.0**: Step 1.5 (patch history loading) and STRUCTURAL_REVIEW classification added. Step 5 logging enhanced with patch counts.
+- **eos-memory-mgmt v1.3.0 → v1.4.0**: M2 table expanded with prediction/outcome events. M5 Extended Sections expanded with PATTERN REGISTRY.
+- **Changelog removed from kernel**: Moved to Notion (EOS Changelog page). Kernel trimmed from 672 to 543 lines.
+- All modified skills: `kernel_compat` bumped to v20.5.0.
+
+### Learned from
+Gap analysis of v20.4.0: in-session metacognition strong but cross-session learning absent (same mistakes recur without detection), rule patches accumulate without structural review (tuning ≠ fixing), constraint graph missing optimization queries (can describe but not minimize), voice extract deduplicates within auto-memory but not across layers (fact proliferation), OUTCOME LOG exists in Spoke schema but nothing writes to it (predictions never compared to reality).
+
+---
 
 ## v20.4.0 — 2026-03-24
 
 ### Added
-- **Early warning detection (eos-metacognition F0)**: Passive monitor firing every response when goal locked. 7 signal types. 2+ signals auto-escalate to F1.
-- **Contradiction pattern mining (eos-contradiction C7)**: Extracts hidden constraints from rejection patterns. Four pattern types. Max 2 presentations per session.
-- **Cross-agent validation (eos-multi-agent Phase 3.5)**: Post-deployment, pre-consolidation. 4 cross-agent conflict types.
-- **Reconciliation audit (eos-multi-agent Phase 4.5)**: Post-consolidation, pre-presentation. 4 audit checks. PASS/FAIL gate.
-- **Skill compatibility breach protocol (eos-memory-mgmt M1.5)**: 4 breach types with severity-based responses.
+- **Early warning detection (eos-metacognition F0)**: Passive monitor firing every response when goal is locked. 7 signal types: confidence decay, assumption accumulation, CCI-G stall, trajectory churn, constraint promotion failure, user correction clustering, regression near-miss. Single signal = log internally. 2+ signals = auto-escalate to F1 diagnostic. Anti-noise exclusions for first 3 exchanges, builder mode, and lens/sim-depth changes.
+- **Contradiction pattern mining (eos-contradiction C7)**: Auto-extracts hidden constraints from rejection patterns in contradiction history (C5). Four pattern types: common constraint, common survivor, escalation consistency, override clustering. Confirmed patterns promote to constraint registry and feed back into Rule 2 simulation, USER MODEL, and F0 early warning resolution. Max 2 presentations per session.
+- **Cross-agent validation (eos-multi-agent Phase 3.5)**: Post-deployment, pre-consolidation structural gate. Detects 4 cross-agent conflict types: scope overlap mutation (two agents mutated same resource), contradictory findings (same subject, opposite claims), stale dependency (Agent A assumes state that Agent B invalidated), circular recommendation (mutual precondition deadlock). Produces structured validation report. Conflicts must resolve before Phase 4 synthesis.
+- **Reconciliation audit (eos-multi-agent Phase 4.5)**: Post-consolidation, pre-presentation structural gate. 4 audit checks: evidence tracing (every synthesis claim must trace to agent finding), omission detection (H-confidence findings missing from synthesis), contradiction honoring (escalated contradictions must appear with resolution), confidence inflation (synthesis confidence cannot exceed constituent minimum). PASS/FAIL gate.
+- **Skill compatibility breach protocol (eos-memory-mgmt M1.5)**: Operationalizes "compression violation until resolved" for incompatible skills. 4 breach types: minor version behind (warn + load), major version behind (disable + notify), missing frontmatter (disable + notify), future version (warn + load). Bulk compatibility report at >3 incompatible. Integration with eos-kernel-updater for post-upgrade re-scan.
 - `cross_agent_validation`, `reconciliation_audit`, `early_warning`, `contradiction_mining`, `skill_breach_protocol` runtime parameters
+- Skill discovery protocol extended with breach protocol (step 6)
+
+### Changed
+- **eos-metacognition v1.0.1 → v1.1.0**: F0 early warning detection added. Trigger conditions updated to include F0 passive monitoring.
+- **eos-contradiction v1.0.1 → v1.1.0**: C7 pattern mining added. Extracts hidden constraints from rejection history.
+- **eos-multi-agent v1.2.0 → v1.3.0**: Phase 3.5 (cross-agent validation) and Phase 4.5 (reconciliation audit) added. Lifecycle expanded from 5 to 7 phases.
+- **eos-memory-mgmt v1.2.0 → v1.3.0**: M1.5 skill compatibility breach protocol added between M1.3 and M1.4.
+- **Rule 6 (Autonomy Tiers)**: Tier 1 expanded to include F0, C7, Phase 3.5, and Phase 4.5 autonomous operations.
+- All 18 skill files: `kernel_compat` bumped to v20.4.0.
+
+### Learned from
+Operational gap analysis of v20.3.0: per-agent loop detection insufficient without cross-agent validation, consolidation reconciliation vulnerable to parent bias, metacognition reactive-only (threshold-based) missing proactive signal detection, contradiction history collecting data but not extracting patterns, skill compatibility stated as violation but had no operational remediation protocol.
+
+---
 
 ## v20.3.0 — 2026-03-24
 

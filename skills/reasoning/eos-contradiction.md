@@ -1,7 +1,7 @@
 ---
 name: eos-contradiction
-version: "v1.0.1"
-kernel_compat: "v20.3.0"
+version: "v1.1.0"
+kernel_compat: "v20.4.0"
 state: trigger-ready
 description: >
   Trajectory-aware contradiction handling. Fires when the user disagrees with
@@ -133,6 +133,49 @@ This history serves two functions:
 2. Provides simulation input — patterns in contradictions reveal the user's actual (possibly unstated) constraints.
 
 After 3+ entries, scan for patterns and surface: "Your rejections of X, Y, Z share [common thread]. Is [inferred constraint] the actual constraint we should be working with?"
+
+---
+
+## C7: Contradiction Pattern Mining (Tier 1 — autonomous)
+
+**Trigger:** Contradiction history (C5) reaches 3+ entries. Runs automatically after each new C5 entry once threshold is met.
+
+**Purpose:** The C5 section notes that patterns should be surfaced after 3+ entries. C7 is the mechanism. It extracts hidden constraints — the unstated rules the user is actually operating under, revealed by what they consistently reject.
+
+### C7.1: Pattern Extraction
+
+Scan contradiction history for recurring rejection signatures:
+
+| Pattern Type | Detection | Example |
+|---|---|---|
+| **Common constraint** | 2+ rejections share the same objection dimension (cost, timeline, complexity, team capability) | Rejected path A for cost, rejected path C for cost → cost ceiling is an unstated hard constraint |
+| **Common survivor** | Same trajectory type consistently survives while others are killed | User always keeps the path with least external dependency → autonomy is a hidden constraint |
+| **Escalation consistency** | Challenge-basis objections cluster around the same evaluation criterion | User repeatedly asks "why not X over Y" with X always being the simpler option → complexity aversion is structural, not incidental |
+| **Override clustering** | User overrides cluster in the same domain (technical, process, people, timeline) | 3 overrides all in "people" domain → user has people-context the model lacks |
+
+### C7.2: Constraint Inference
+
+For each detected pattern:
+
+1. **Formulate the hidden constraint:** State it as a falsifiable proposition. "Based on rejections [list], the operating constraint appears to be: [constraint]."
+2. **Classify:** Propose classification (Hard/Structural/Assumed) based on the consistency and strength of the rejection pattern.
+3. **Present for validation:** Surface to user: `Pattern detected in contradiction history: [pattern]. Inferred constraint: [constraint]. Should this be promoted to [classification] in the constraint registry?`
+4. **On confirmation:** Add to constraint graph (if active) via G2.1. Add to Notion Spoke CONSTRAINT REGISTRY. Future trajectory enumeration incorporates this constraint from the start — no more wasted cycles on paths that violate it.
+5. **On rejection:** Log as "pattern noted, constraint not confirmed." Do not re-surface the same pattern unless new evidence strengthens it (2+ additional rejections in the same dimension).
+
+### C7.3: Feedback Loop
+
+Mined constraints that are confirmed feed back into:
+- **Rule 2 (Generation Frame):** Constraint is now a simulation input. Trajectories that violate it are killed during enumeration, not after recommendation.
+- **eos-metacognition F0:** If pattern mining reveals the source of a confidence decay or trajectory churn signal, it resolves the F0 early warning rather than requiring F1-F2 diagnostic.
+- **USER MODEL:** If the mined constraint reveals a user operating pattern not yet in the USER MODEL, update the USER MODEL (per Rule 7 miss-flag protocol).
+
+### C7.4: Anti-Noise
+
+- Do not mine patterns from fewer than 3 contradiction history entries. Sample too small.
+- Do not mine patterns from builder mode contradictions (condensed simulation — rejection patterns are methodologically different).
+- Do not count user overrides after hold as the same weight as argued rejections. Overrides may be pragmatic ("just do it my way") rather than constraint-revealing.
+- Maximum 2 pattern presentations per session. More than that is self-analysis overhead.
 
 ---
 
