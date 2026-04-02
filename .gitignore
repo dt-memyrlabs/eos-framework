@@ -18,6 +18,11 @@ desktop.ini
 # Note: examples/memory/ and skills/memory/ are part of the repo
 /memory/
 
+# Environment variables
+.env
+.env.local
+.env*.local
+
 # Temp files
 /tmp/
 *.tmp
