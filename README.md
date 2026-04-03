@@ -1,8 +1,8 @@
-# EOS -- Enlightened Operating System v20.5.0
+# EOS -- Enlightened Operating System v21.0.0
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-A prompt engineering framework that shapes Claude's behavior through structured context displacement.
+A prompt engineering framework that shapes Claude's behavior through structured context displacement. v21 adds compaction-surviving state persistence via hooks and an architecturally forked slim kernel.
 
 ---
 
@@ -18,9 +18,11 @@ The result: responses that reflect the user's actual operating environment inste
 
 EOS has two layers:
 
-1. **Kernel** (`CLAUDE.md`) -- loaded as system instructions. Contains the USER MODEL, identity declarations, architecture rules, and 10 operational rules. Token ordering is enforced: USER MODEL before Identity before Architecture before Rules.
+1. **Kernel** (`CLAUDE.md`) -- loaded as system instructions. Contains the USER MODEL, identity declarations, compressed rule summaries, state recovery protocol, and hook declarations. Token ordering enforced: USER MODEL before Identity before Architecture before Rules. v21 slim core: ~176 lines / ~2,800 tokens (down from 545 lines / ~10,400 tokens).
 
-2. **Skills** -- 18 modular files that activate on specific triggers (user keywords, state transitions, metric thresholds). Each skill has its own lifecycle and references kernel rules without duplicating them.
+2. **Skills** -- 22 modular files that activate on specific triggers (user keywords, state transitions, metric thresholds). Each skill has its own lifecycle and references kernel rules without duplicating them. v21 adds 4 reference skills that carry full rule text, lens/sim-depth tables, runtime params, and subagent boundaries extracted from the kernel.
+
+3. **Hooks** -- Shell scripts that fire on Claude Code lifecycle events (PreCompact, SessionStart, SessionEnd). v21 adds state persistence hooks that survive context compaction.
 
 ### What it looks like in practice
 
@@ -97,7 +99,7 @@ EOS has 10 operational rules. Each handles a specific mechanical concern.
 
 ## Skills
 
-18 skill modules organized in 7 categories. Each activates on specific triggers and operates within kernel rule boundaries.
+22 skill modules organized in 7 categories. Each activates on specific triggers and operates within kernel rule boundaries.
 
 ### Lifecycle
 - `eos-cold-start` -- New project creation and initialization
@@ -116,6 +118,8 @@ EOS has 10 operational rules. Each handles a specific mechanical concern.
 - `eos-contradiction` -- Dialectic contradiction handling, re-entry after rejection, C7 pattern mining (extracts hidden constraints from rejection history)
 - `eos-constraint-graph` -- Constraint classification, dependency mapping, cascade unlocking, G2.6 minimization query (minimum constraint relaxation set)
 - `eos-dimension-ambiguity` -- Handles ambiguous responses during dimension probing
+- `eos-rules-reference` -- Full verbose Rules 1-10 text (extracted from kernel in v21 for on-demand loading)
+- `eos-lens-simdepth` -- Context Lens and Simulation Depth reference tables
 
 ### Quality
 - `eos-metacognition` -- F0 early warning (passive 7-signal degradation monitor), F1-F2 diagnostics, F3 rule patching with anti-churn check, F4 cross-session lessons via `tasks/lessons.md`
@@ -130,6 +134,8 @@ EOS has 10 operational rules. Each handles a specific mechanical concern.
 - `eos-collaboration` -- Multi-user session coordination and attribution
 - `eos-multi-agent` -- 7-phase agent lifecycle: pre-flight, recon, decomposition, deployment, Phase 3.5 cross-agent validation, consolidation, Phase 4.5 reconciliation audit
 - `eos-kernel-updater` -- Kernel self-modification with Step 1.5 patch churn detection (3+ patches on same rule triggers structural review)
+- `eos-runtime-params` -- Full runtime parameters reference table
+- `eos-autonomy-boundaries` -- Subagent execution boundaries and tool budget enforcement
 
 ---
 
@@ -182,21 +188,24 @@ See [docs/quick-start.md](docs/quick-start.md) for a detailed walkthrough. See [
 ```
 eos-framework/
   kernel/
-    CLAUDE.md              # The kernel (~543 lines). System instructions loaded at session start.
+    CLAUDE.md              # Slim kernel (~176 lines). System instructions loaded at session start.
   skills/
     lifecycle/             # Cold start, goal framing, project management
     build/                 # Artifact construction
     memory/                # Persistence, recall, knowledge graph
-    reasoning/             # Contradiction, constraints, ambiguity
+    reasoning/             # Contradiction, constraints, ambiguity, rules reference, lens/sim-depth
     quality/               # Metacognition, fact-check, voice, drift
     output/                # Report generation
-    system/                # Collaboration, multi-agent, kernel updates
+    system/                # Collaboration, multi-agent, kernel updates, runtime params, boundaries
   docs/
     architecture.md        # Deep-dive on context-staging philosophy
     installation.md        # Platform-specific setup instructions
     quick-start.md         # 5-minute setup guide
     skill-authoring.md     # How to write new skills
   hooks/
+    eos-precompact.sh      # State backup before context compaction
+    eos-session-start.sh   # State injection on session start / post-compaction
+    eos-session-end.sh     # Final state backup on session close
     credential-guard.sh    # Blocks edits to .env / credential files
     file-backup.sh         # Auto-snapshots before file mutations
     search-year-fix.sh     # Appends current year to web searches
@@ -221,13 +230,16 @@ eos-framework/
 
 ## Hooks
 
-Three Claude Code hooks ship with EOS for filesystem-level safety and search quality:
+Six Claude Code hooks ship with EOS -- three for state persistence (v21) and three for safety/quality:
 
-| Hook | Purpose |
-|------|---------|
-| `credential-guard.sh` | Blocks Write/Edit on `.env`, credential files, private keys |
-| `file-backup.sh` | Creates timestamped backup before any file mutation |
-| `search-year-fix.sh` | Appends current year to web searches for fresh results |
+| Hook | Event | Purpose |
+|------|-------|---------|
+| `eos-precompact.sh` | PreCompact | Backs up EOS state file before context compaction, injects recovery message |
+| `eos-session-start.sh` | SessionStart | Injects state file content on session start and post-compaction reload |
+| `eos-session-end.sh` | SessionEnd | Final state backup on session close |
+| `credential-guard.sh` | PreToolUse | Blocks Write/Edit on `.env`, credential files, private keys |
+| `file-backup.sh` | PreToolUse | Creates timestamped backup before any file mutation |
+| `search-year-fix.sh` | PreToolUse | Appends current year to web searches for fresh results |
 
 See [hooks/README.md](hooks/README.md) for installation instructions.
 
@@ -236,8 +248,10 @@ See [hooks/README.md](hooks/README.md) for installation instructions.
 ## Known Issues
 
 - **Pieces LTM reference drift.** Pieces MCP supplementary writes can drift from Notion state over long sessions. Notion is authoritative when they conflict. Pieces is a convenience layer, not a source of truth.
-- **Context window pressure.** The kernel is approximately 8,000 tokens (~6,000 words, 543 lines). The Context Limit Monitor (Rule 9) manages context pressure, but users in extended sessions should monitor the `ltm` counter in the runtime header.
+- **Context window pressure.** The slim kernel is approximately 2,800 tokens (~176 lines). v21 reduced this from ~10,400 tokens by moving verbose content to on-demand skill files. The Context Limit Monitor (Rule 9) manages context pressure, but users in extended sessions should monitor the `ltm` counter in the runtime header.
 - **Skill module loading.** On claude.ai (non-Code), skill loading depends on the Projects feature placing files in `/mnt/skills/user/`. Verify paths if skills are not triggering.
+- **State file prompt cache impact.** The SessionStart hook injects state file content as a systemMessage. Whether this breaks Claude Code's prompt cache prefix stability depends on where hook systemMessages are inserted in the API request. Empirical testing needed -- if cache breaks are detected, state injection can move to a file read on the first model turn instead.
+- **Compaction survival is best-effort.** The state file captures what the model wrote during the conversation. If the model fails to write state on a change event, that state is lost. The PreCompact hook warns on stale state (>5min).
 
 ---
 

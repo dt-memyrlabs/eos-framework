@@ -1,7 +1,7 @@
 ---
 name: eos-memory-mgmt
-version: "v1.4.0"
-kernel_compat: "v20.5.0"
+version: "v1.2.0"
+kernel_compat: "v21.0.0"
 state: trigger-ready
 description: "Memory hierarchy management — Notion as primary persistence, Pieces as supplementary ambient capture, writeback policy, Spoke/Hub structure. Triggers on session start (persistence detection — HARD GATE), project load, any critical state change (goal shifts, I-tagged decisions, new locked variables, agreements, concessions). Also triggers when reading or writing to Notion Spokes, loading project state, or managing session continuity."
 ---
@@ -60,42 +60,6 @@ After M1.1 completes:
 - Flag sparse USER MODEL: `⚠️ USER MODEL SPARSE — prior displacement weak. Gather context before non-trivial deliverables.`
 - Update USER MODEL on every decision-lock event that changes user context (new domain info, validated patterns, vocabulary).
 
-### M1.5: Skill Compatibility Breach Protocol
-
-**Trigger:** Skill discovery (Architecture section) detects a skill with `kernel_compat` that does not match the current kernel version.
-
-The kernel already states that incompatible skills are a "compression violation until resolved." M1.5 defines what "resolved" means operationally.
-
-**Breach classification:**
-
-| Breach Type | Detection | Severity | Response |
-|---|---|---|---|
-| **Minor version behind** | Skill `kernel_compat` matches major version but is behind minor (e.g., skill at v20.3.0, kernel at v20.4.0) | LOW | **Warn and load.** Skill likely functional — minor versions add behaviors, rarely break existing ones. Flag: `⚠️ SKILL COMPAT: [skill name] at [version] — kernel is [version]. Behavior may be incomplete.` |
-| **Major version behind** | Skill `kernel_compat` does not match major version (e.g., skill at v19.x, kernel at v20.x) | HIGH | **Disable and notify.** Major version changes are architectural shifts. Skill may conflict with kernel mechanics. Flag: `🚫 SKILL DISABLED: [skill name] — kernel_compat [version] incompatible with kernel [version]. Skill will not fire until updated.` |
-| **Missing frontmatter** | Skill file has no `kernel_compat` field | HIGH | **Disable and notify.** Unknown compatibility is treated as incompatible. Same response as major version behind. |
-| **Future version** | Skill `kernel_compat` is ahead of kernel version | MEDIUM | **Warn and load.** Skill was written for a newer kernel. May reference behaviors that don't exist yet. Flag: `⚠️ SKILL COMPAT: [skill name] targets [version] — kernel is [version]. Some skill behaviors may reference unavailable kernel features.` |
-
-**Remediation paths:**
-
-1. **Auto-remediation (minor version behind):** If the only incompatibility is a `kernel_compat` version string and the skill's mechanics are structurally compatible (no references to removed behaviors), the skill loads with a warning. No action required unless the skill malfunctions.
-2. **Manual remediation (major version behind / missing):** Skill is disabled. User options:
-   - Update the skill to current kernel_compat (if skill author).
-   - Remove the skill from the skill directory.
-   - Override with explicit instruction: "load [skill name] despite version mismatch" — logged as user override, skill loads with persistent warning.
-3. **Bulk compatibility check:** After kernel upgrade, if >3 skills are incompatible, present a summary table rather than individual warnings:
-
-```
-SKILL COMPATIBILITY REPORT
-===========================
-| Skill | Current | Required | Status |
-|-------|---------|----------|--------|
-| [name] | [version] | [kernel version] | ⚠️ warn / 🚫 disabled |
-...
-Action needed: [N] skills disabled. Update or remove before full operation.
-```
-
-**Integration with eos-kernel-updater:** When the kernel-updater skill (K1-K3) applies a kernel version bump, it must re-run skill discovery to detect newly incompatible skills. The version bump is not complete until all skills are either compatible or explicitly disabled.
-
 ### M1.4: Report
 
 Persistence status is reported in the runtime header via `[ltm:X|—]` (exchanges since last write). CCI-F is checked at session start only (not per-response).
@@ -127,8 +91,6 @@ Notion is the authoritative store for all structured project information. Every 
 | Convergence declared | Rule 3 | Final state, outcome, lessons if applicable |
 | Context threshold (70%) | Rule 9 | Full project state: active goal, locked variables, open threads, CCI-G, assumption log, last decision, open blockers |
 | USER MODEL updated | Rule 7 | Updated USER MODEL fields with change reason |
-| Prediction made | Rule 2 | Decision/recommendation, predicted outcome, status OPEN — appends to OUTCOME LOG |
-| Outcome confirmed | C5 | Matched prediction, actual outcome, delta (match/partial/miss), reason — updates OUTCOME LOG entry |
 
 Each write includes: event type, active project identifier, timestamp context.
 
@@ -161,6 +123,27 @@ Pieces is a cross-environment persistence layer operating at the OS level — co
 - **Routine state changes** (assumption updates, thread progress, R-tagged decisions) → batched and written at session end if possible.
 - **Accepted tradeoff:** If the session terminates unexpectedly, routine changes may be lost. This is a design decision, not a gap. Critical state is protected by immediate writes. Routine state accepts the risk. Do not over-prioritize writes to avoid this loss.
 
+### M4.1: Local State File (Compaction Survival)
+
+In addition to Notion writes, critical state changes also write to `~/.claude/eos-state/current-state.json`. This file survives Claude Code compaction via PreCompact/SessionStart hooks.
+
+**Write triggers (same as Notion critical writes + additional runtime state):**
+- Goal lock/unlock/move
+- Variable lock/unlock
+- Constraint classification change
+- CCI-G change of 10+ points
+- Position held/moved
+- Lens or sim-depth change
+- Builder mode toggle
+- Thread open/close
+- Any decision-lock event
+
+**Write method:** Model writes the JSON file via Write tool. One write per response maximum — batch multiple changes. State file is lightweight (~500-800 tokens).
+
+**Relationship to Notion:** State file is the fast-recovery path (local, no API call). Notion Spoke is the durable cross-session path. Both are written on critical events. On session start, state file is tried first (injected by SessionStart hook). If stale or missing, Notion Spoke is queried.
+
+**State file schema:** See STATE RECOVERY section in CLAUDE.md for full schema and recovery protocol.
+
 Gather minimum viable context from available memory layers, then let simulation run. Don't wait for perfect information. Stalling to gather more context when enough exists to simulate is a violation.
 
 ## M5: State Storage Structure
@@ -183,7 +166,6 @@ Gather minimum viable context from available memory layers, then let simulation 
 - `OUTCOME LOG` — date: decision | predicted | actual | calibration
 - `FRAMEWORK FLAGS (Claude-side)` — date: violation | root cause | resolved
 - `FRAMEWORK FLAGS (User-side)` — date: pattern | description | DT response | resolved
-- `PATTERN REGISTRY` — supplementary backup of `tasks/lessons.md` content. Primary store is file-based. Notion copy maintained for cross-device access if needed. See eos-metacognition F4.
 
 ### Hub Database (00_MASTER_HUB):
 Name, Priority, Status, Global Blockers, Collaborators, Autonomy Overrides.

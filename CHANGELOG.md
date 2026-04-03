@@ -2,6 +2,49 @@
 
 All notable changes to EOS are documented here.
 
+## v21.0.0 — 2026-04-02
+
+### Architecture
+
+**Architectural fork for Claude Code compaction survival.** Based on analysis of Claude Code's 7-layer memory architecture (tool result storage, microcompaction, session memory, full compaction, auto memory extraction, dreaming, cross-agent communication), EOS v21 is restructured to persist runtime state through context compaction events.
+
+**Problem:** Claude Code aggressively compresses context when approaching token limits. The kernel reloads via SessionStart hooks, but conversation-specific state (locked variables, CCI-G, constraint graph, position history, regression locks) was destroyed on every compaction.
+
+**Solution:** Slim core + on-demand modules + PreCompact/SessionStart hooks for state persistence.
+
+### Added
+- **PreCompact hook (`eos-precompact.sh`)**: Fires before context compaction. Backs up EOS state file, injects recovery instructions as systemMessage. Detects stale state (>5min) and warns.
+- **SessionStart hook (`eos-session-start.sh`)**: Fires on session start and post-compaction reload. Injects state file content as systemMessage for immediate recovery without requiring a file read.
+- **SessionEnd hook (`eos-session-end.sh`)**: Final backup of state file on session close.
+- **State file (`~/.claude/eos-state/current-state.json`)**: Continuous persistence of runtime state. Schema covers: active goal, locked variables, CCI-G, lens, sim-depth, position history, constraint classifications, regression locks, assumptions, open threads.
+- **Continuous write protocol**: Model writes state file on every state-change event (Tier 1 autonomous). One write per response maximum.
+- **STATE RECOVERY BLOCK** in kernel: Instructions for post-compaction state recovery with session matching and Notion Spoke fallback.
+- **`eos-rules-reference` skill** (reasoning/): Full verbose text of Rules 1-10 with all edge cases, examples, constraint classification table, assumption handling, simulation scaling, source reconnaissance, Protocol 0.
+- **`eos-lens-simdepth` skill** (reasoning/): Context Lens (1-5) and Simulation Depth (1-7) reference tables with combined control explanation. Loaded on "lens X", "sim X", "depth X".
+- **`eos-runtime-params` skill** (system/): Full runtime parameters reference block. Loaded on explicit request.
+- **`eos-autonomy-boundaries` skill** (system/): Subagent execution boundaries, tool budget enforcement, data flow scoping. Loaded when eos-multi-agent active.
+- **M4.1 in eos-memory-mgmt**: Local state file write protocol alongside Notion writeback policy.
+
+### Changed
+- **Kernel compressed: 545 lines / 43.7KB → 176 lines / 10.6KB** (75.7% byte reduction, ~70% token reduction). Every named behavior mapped to slim core or skill file per compression prohibition protocol.
+- **Rules 1-10**: Compressed to 2-3 line summaries in kernel with HARD GATES preserved. Full text moved to `eos-rules-reference` skill.
+- **Context Lens and Simulation Depth tables**: Moved from kernel to `eos-lens-simdepth` skill.
+- **Runtime Parameters block**: Moved from kernel to `eos-runtime-params` skill.
+- **Subagent boundary tables**: Moved from kernel to `eos-autonomy-boundaries` skill.
+- **STATE STORAGE section**: Removed from kernel (was duplicate of eos-memory-mgmt M5). Single source of truth in eos-memory-mgmt.
+- **eos-memory-mgmt v1.4.0 → v1.5.0**: M4.1 added for state file protocol. kernel_compat bumped to v21.0.0.
+
+### Token Budget Impact
+- Always-loaded kernel: ~10,400 tokens → ~2,800 tokens (-7,600 tokens)
+- State file recovery: +500-800 tokens (on-demand)
+- Net gain: ~6,800 tokens of freed working context before compaction triggers
+- On-demand skill files compete with 25K skill injection budget, not always-loaded budget
+
+### Learned from
+Troy Hua's reverse-engineering of Claude Code's leaked harness revealed the 7-layer memory architecture. Key insight: EOS assumed stable persistent context; Claude Code assumes disposable context with aggressive compression. The architectural fork adapts EOS to mirror Claude Code's own memory pattern (slim index always loaded, full content on-demand, background consolidation).
+
+---
+
 ## v20.5.0 — 2026-03-24
 
 ### Added
