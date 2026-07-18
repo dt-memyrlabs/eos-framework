@@ -42,7 +42,7 @@ The kernel ([kernel/CLAUDE.md](kernel/CLAUDE.md), ~100 lines) contains:
 | 4 | Regression Lock | Resolved is locked; re-opening requires new evidence. |
 | 5 | Output Integrity | Noun-swap test; header present. |
 
-- **Runtime header** -- reduced to facts: `[goal:locked|open] [assump:N] [conf:H/M/L] [pos:held/moved|basis]`. Goal state is a fact, the assumption count is countable, confidence is a stated mapping from that count, position is a fact. The old dashboard fields (lens, sim-depth, CCI-G percentage) are gone: either the axis was retired or the number had no instrument behind it.
+- **Runtime header** -- reduced to facts: `[lens:name] [goal:locked|open] [assump:N] [conf:H/M/L] [pos:held/moved|basis]`. The lens is a free-form name for the layer of work, user-steerable via `lens: <name>` in any prompt (restored by user decision in v22.4.1; its value is untested). Goal state is a fact, the assumption count is countable, confidence is a stated mapping from that count, position is a fact. The old numeric dashboard fields (1-5 lens, sim-depth, CCI-G percentage) are gone: either the axis was retired or the number had no instrument behind it.
 - **Lessons** -- every user correction is written to `tasks/lessons.md` immediately and loaded at session start.
 - **Builder mode, state storage, workflow discipline** -- one short section each.
 
