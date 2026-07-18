@@ -2,6 +2,17 @@
 
 All notable changes to EOS are documented here.
 
+## v22.4.1 — 2026-07-17
+
+### Changed
+
+- **Named lens restored to the runtime header by user decision** (user authority overrides defaults): `[lens:name] [goal:locked|open] [assump:N] [conf:H/M/L] [pos:held/moved|basis]`. The lens VALUE is a stateable fact (what layer of work the response claims to operate on) and is user-steerable via the hook; whether declaring it improves output remains the open assumption registered in v22.4.0. Not a reinstatement of the retired 1–5 numeric axis. Shipped without a harness run on explicit user authority; the eos-test A/B remains the registered falsification path.
+
+### Fixed
+
+- This entry itself: the v22.4.1 code shipped in a3fc85d without its changelog entry — a CRLF-vs-LF anchor mismatch made the insertion silently no-op while its verification check passed on a -1 indexOf. Recorded here as a lesson in instrument honesty.
+
+
 ## v22.4.0 — 2026-07-17
 
 Merge of the two account lines. This repo's main had shipped its own "v21.1.0" (2026-07-17, hooks release) unaware of this line's v21.1.0→v22.3.0 run; that release is folded in here and its version number retired — this line's v21.1.0 (truth-gate, 2026-07-14) stands as the canonical v21.1.0.
