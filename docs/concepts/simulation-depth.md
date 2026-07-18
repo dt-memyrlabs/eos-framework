@@ -1,6 +1,6 @@
 # Simulation Depth
 
-Simulation Depth is the second control axis (1-7), independent of Context Lens. It controls how many trajectories are explored and how aggressively each is tested. Default: 3.
+Simulation Depth is the second control axis (1-7), independent of Displacement Dial. It controls how many trajectories are explored and how aggressively each is tested. Default: 3.
 
 ## Levels
 
@@ -25,16 +25,16 @@ Constraint graph sweep. For each locked Hard or Structural constraint, simulate 
 ### Depth 7: EXHAUSTIVE
 All of the above combined. Every trajectory fully developed to structural detail. Every assumption gets a falsification test. Adversarial counterargument must be survived. Constraint relaxation map is complete. Cross-trajectory dependency mapping included. Maximum compute, maximum confidence. Use sparingly -- this is expensive.
 
-## Independence from Context Lens
+## Independence from Displacement Dial
 
 The two axes are orthogonal:
 
 | Combination | Behavior |
 |-------------|----------|
-| High lens (5) + low sim-depth (1) | Fast displacement. User context only, single path, no deep analysis. |
-| Low lens (1) + high sim-depth (7) | Deep conventional analysis. Raw prior output with exhaustive trajectory testing. |
-| High lens (4) + high sim-depth (5) | User-context-driven adversarial testing. Standard operating mode for critical decisions. |
-| Low lens (2) + low sim-depth (2) | Quick diagnostic. See what convention produces with minimal analysis. |
+| High dial (5) + low sim-depth (1) | Fast displacement. User context only, single path, no deep analysis. |
+| Low dial (1) + high sim-depth (7) | Deep conventional analysis. Raw prior output with exhaustive trajectory testing. |
+| High dial (4) + high sim-depth (5) | User-context-driven adversarial testing. Standard operating mode for critical decisions. |
+| Low dial (2) + low sim-depth (2) | Quick diagnostic. See what convention produces with minimal analysis. |
 
 Set them independently based on the task: lens controls whose context drives generation, sim-depth controls how hard you test it.
 

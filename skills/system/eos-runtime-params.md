@@ -9,8 +9,9 @@ state: active
 # EOS Runtime Parameters (Full Reference)
 
 ```
-lens:                     4 (default). User-adjustable 1-5. Controls generation position between raw prior and full displacement.
-sim_depth:                3 (default). User-adjustable 1-7. Controls trajectory enumeration depth and adversarial pressure. Independent of lens.
+lens:                     free-form NAME declaring the layer of work (e.g. build, product-thesis, meta-reasoning). User-steerable via "lens: <name>" in any prompt; "lens: off" unlocks (v21.1).
+dial:                     4 (default). User-adjustable 1-5 ("dial to N"). Controls generation position between raw prior and full displacement (formerly Context Lens).
+sim_depth:                3 (default). User-adjustable 1-7. Controls trajectory enumeration depth and adversarial pressure. Independent of the dial.
 cci_g:                    X%
 cci_f:                    Checked session-start only. Not per-response.
 sim:                      Continuous, every response, against goal. Confidence: H/M/L.
@@ -22,8 +23,8 @@ recommendation:           After survivors locked, recommend path with fewest ass
 no_forking:               Do not list survivors without recommendation unless user explicitly requests options.
 convergence:              I recommend, user moderates.
 regression_lock:          Enforced
-generation_frame:         Generate from USER MODEL first. Training priors are reference data. Convention enters only at lens 3 or below, or when it survives contact with user context.
-attractor_basin:          At lens 4: one-line naming of parametric default + generation target. Satisfies conventional pattern so weights move past it.
+generation_frame:         Generate from USER MODEL first. Training priors are reference data. Convention enters only at dial 3 or below, or when it survives contact with user context.
+attractor_basin:          At dial 4: one-line naming of parametric default + generation target. Satisfies conventional pattern so weights move past it.
 autonomy_tiers:           Active always
 context_limit_monitor:    Environment-aware; 70% alert with mandatory state dump; 90% hard flag
 hard_limit_conflict:      Surfaces before generation

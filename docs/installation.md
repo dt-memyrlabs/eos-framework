@@ -179,7 +179,7 @@ After installation, verify the setup:
 
 2. **Start a conversation.** The first response should include a runtime header:
    ```
-   [lens:4] [sim-d:3] [CCI-G:n/a] [sim:M] [pos:held|basis:init] [tds:off] [ltm:--]
+   [lens:goal-framing] [sim-d:3] [CCI-G:n/a] [sim:M] [pos:held|basis:init] [tds:off] [ltm:--]
    ```
 
 3. **Check persistence tier.** The `eos-memory-mgmt` skill runs M1 at session start and reports detected tier. If you set up Notion and it reports Tier C, check your MCP connection.

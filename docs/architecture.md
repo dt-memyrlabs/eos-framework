@@ -24,7 +24,7 @@ Displacement changes what the model generates from in the first place. If the US
 
 Language models have attractor basins: high-probability response patterns that training made deeply entrenched. "Best practices" advice, hedged recommendations, consultant-speak. These basins are gravitational -- without strong countervailing context, generation falls into them.
 
-EOS handles this at lens 4 (the default) with a single-line mechanic called **attractor basin naming**:
+EOS handles this at dial 4 (the default) with a single-line mechanic called **attractor basin naming**:
 
 ```
 PRIOR: [specific conventional output the weights want to produce]. Target: [specific alternative from user context].
@@ -32,7 +32,7 @@ PRIOR: [specific conventional output the weights want to produce]. Target: [spec
 
 This line satisfies the conventional pattern -- it exists in context, so the weights treat it as completed territory. The next token has already "said" the conventional thing. Generation moves past it to the user-context alternative. One line of context displacement replaces what would otherwise require multiple passes of output filtering.
 
-At lens 5, the conventional pattern gets zero tokens -- full displacement. At lens 3 and below, the conventional path gets progressively more development for diagnostic comparison.
+At dial 5, the conventional pattern gets zero tokens -- full displacement. At dial 3 and below, the conventional path gets progressively more development for diagnostic comparison.
 
 ---
 
@@ -110,26 +110,26 @@ The kernel tracks skill state in the `module_state` runtime parameter and valida
 
 EOS exposes two independent dimensions that the user adjusts during conversation.
 
-### Context Lens (1--5): Prior Displacement
+### Displacement Dial (1--5): Prior Displacement
 
 Controls how much of the training prior enters the generation frame.
 
-- At lens 5, the USER MODEL saturates the generation frame entirely. Convention gets zero tokens. Risk: blind spots if convention has something useful.
-- At lens 4 (default), the conventional output is named in a single line (attractor basin naming), then generation proceeds from user context. The convention exists in the attention window as completed territory.
-- At lens 3, both conventional and user-context paths are fully developed as parallel trajectories and compared against the goal.
-- At lens 2, the conventional output is generated first as a complete artifact. Then the user-context alternative is generated alongside it. Diagnostic mode for seeing what the weights want to produce.
-- At lens 1, no displacement at all. Pure training distribution output. Maps the attractor basin.
+- At dial 5, the USER MODEL saturates the generation frame entirely. Convention gets zero tokens. Risk: blind spots if convention has something useful.
+- At dial 4 (default), the conventional output is named in a single line (attractor basin naming), then generation proceeds from user context. The convention exists in the attention window as completed territory.
+- At dial 3, both conventional and user-context paths are fully developed as parallel trajectories and compared against the goal.
+- At dial 2, the conventional output is generated first as a complete artifact. Then the user-context alternative is generated alongside it. Diagnostic mode for seeing what the weights want to produce.
+- At dial 1, no displacement at all. Pure training distribution output. Maps the attractor basin.
 
 ### Simulation Depth (1--7): Trajectory Pressure
 
-Controls how many trajectories are explored and how aggressively each is tested. Independent of lens -- you can run high displacement with shallow simulation (fast, opinionated) or low displacement with deep simulation (thorough conventional analysis).
+Controls how many trajectories are explored and how aggressively each is tested. Independent of the dial -- you can run high displacement with shallow simulation (fast, opinionated) or low displacement with deep simulation (thorough conventional analysis).
 
 - At sim-depth 1, a single trajectory with a confidence tag. No enumeration. Use for routine, low-stakes responses.
 - At sim-depth 3 (default), all viable trajectories are enumerated. Each gets one failure mode and one constraint test. The path with fewest assumptions wins.
 - At sim-depth 5, after selecting a recommendation, the system generates the strongest counterargument to it. If the recommendation does not survive its own counterargument, it is killed and alternatives are re-ranked.
 - At sim-depth 7, every trajectory is fully developed. Every assumption gets a falsification test. Adversarial counterargument must be survived. Constraint relaxation map is completed. Maximum compute.
 
-The axes are independent. `[lens:5, sim-d:1]` means full user-context displacement with minimal simulation -- fast, high-conviction responses grounded entirely in user context. `[lens:2, sim-d:7]` means full conventional output with exhaustive simulation -- deep analysis of what the training distribution produces. Both are valid configurations for different purposes.
+The axes are independent. `dial 5 + sim-d 1` means full user-context displacement with minimal simulation -- fast, high-conviction responses grounded entirely in user context. `dial 2 + sim-d 7` means full conventional output with exhaustive simulation -- deep analysis of what the training distribution produces. Both are valid configurations for different purposes.
 
 ---
 

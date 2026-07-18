@@ -2,6 +2,30 @@
 
 All notable changes to EOS are documented here.
 
+## v21.1.0 — 2026-07-17
+
+### Fixed
+
+**The v21.0 state-persistence hooks never worked as published.** Three independent failures, found during a live session audit:
+
+1. **No registration.** `hooks-settings.json` never included the EOS lifecycle hooks (only the PreToolUse safety hooks), so installs following the docs registered nothing. Hand-registering at the top level of settings.json — the natural guess — is silently ignored; Claude Code only reads hooks nested under the `"hooks"` key.
+2. **Wrong output field.** The scripts injected state via `systemMessage`, which only displays text to the human. The field that reaches model context is `hookSpecificOutput.additionalContext`. The headline v21 feature — post-compaction state recovery — could not function through the field it used, on any platform.
+3. **python3 dependency.** On Windows, `python3` commonly resolves to the Microsoft Store stub (prints "Redirecting…" and opens the Store). The scripts silently produced garbage.
+
+All three replaced by one cross-platform Node dispatcher, `hooks/eos-hook.js` (modes: `prompt` | `session-start` | `pre-compact` | `session-end`), registered for all four events in `hooks-settings.json`. The bash state hooks (`eos-precompact.sh`, `eos-session-start.sh`, `eos-session-end.sh`) are removed. Requires Node; no python3, no jq.
+
+### Added
+
+- **UserPromptSubmit hook (`eos-hook.js prompt`)** — the load-bearing addition. Injects the state file + runtime mandates into model context on **every prompt**, making the runtime header and state-write protocol deterministic instead of attention-dependent. Rules that live in tokens only fire when the model attends to them; this hook delivers them adjacent to every user message, where attention is guaranteed.
+- **User lens steering.** `lens: <name>` (also `/lens <name>`, `lens=<name>`) anywhere in a prompt steers and locks the lens; `lens: off` (or `free`/`unlock`/`auto`) returns the choice to the model. The directive is persisted to the state file and injected *before the model reads the prompt* — steering at position zero, where it has maximum leverage. A user-locked lens holds until the user moves it (Rule 7).
+- **Backup pruning** — pre-compact backups keep 20, session-end backups keep 10.
+
+### Changed
+
+- **Lens is now a free-form NAME declaring the layer of work** (e.g. `build`, `product-thesis`, `meta-reasoning`) — a steering token filled at position zero of every response. No enumerated vocabulary by design: the frame is rigid (the slot must be filled), the interior is free (any name works).
+- **The numeric 1–5 prior-displacement setting is renamed Displacement Dial** (`dial to N`, state-file field `dial`); its table and the attractor-basin naming mechanic are unchanged. See the reworked `eos-lens-simdepth` skill. Numeric values no longer parse as lens steering.
+- Kernel STATE RECOVERY and RUNTIME HEADER sections updated to match; kernel and `eos-lens-simdepth` bumped to v21.1.0.
+
 ## v21.0.0 — 2026-04-02
 
 ### Architecture
