@@ -27,7 +27,7 @@ State injection uses `hookSpecificOutput.additionalContext` — the field that r
 
 Scope notes: `credential-guard.sh` and `file-backup.sh` only intercept the Write/Edit tools — file mutations made through Bash commands bypass both. Since v22, Claude Code's native auto-memory and compaction summaries overlap the state hooks; they remain the schema-controlled copy.
 
-## Lens steering (optional, untested)
+## Lens steering (header field as of v22.4.1; value untested)
 
 The user may steer a free-form layer-of-work label by typing `lens: <name>` (or `/lens <name>`, `lens=<name>`) anywhere in a prompt; `lens: off` (or `free`/`unlock`/`auto`) returns the choice to the model. The directive is persisted to the state file and injected before the model reads the prompt. Mechanism: explicit injected instruction — no position-dominance claim (that theory was refuted in the 2026-07-14 experiment). Whether lens labels measurably improve output is an open hypothesis; test with `tools/eos-test` before treating it as load-bearing.
 

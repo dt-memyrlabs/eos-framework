@@ -7,7 +7,7 @@
 // Store stub, which prints "Redirecting..." instead of executing).
 // Usage: node eos-hook.js <prompt|session-start|pre-compact|session-end>
 //
-// Lens steering (UserPromptSubmit, OPTIONAL — untested feature, see changelog):
+// Lens steering (UserPromptSubmit; lens is a header field as of v22.4.1 — value untested, see changelog):
 // the user writes "lens: <name>" (or /lens <name>, lens=<name>) anywhere in a
 // prompt to steer + lock a free-form layer-of-work label. "lens: off|free|unlock|auto"
 // returns the choice to the model. The directive is persisted to the state file
@@ -93,7 +93,7 @@ process.stdin.on('end', () => {
     lines.push('state: none — fresh session. Initialize ~/.claude/eos-state/current-state.json on first state-change event.');
   }
   if (steer) lines.push(steer);
-  lines.push('MANDATES: begin the response with the v22 runtime header — [goal:locked|open] [assump:N] [conf:H/M/L] [pos:held/moved|basis] — facts only, per Rule 2. Default to brief — expand only when asked. On any state-change trigger (goal, variable lock, assumption open/close, position, threads, decision) write decision-locks to Notion when available and update the state file via the Write tool — max one write per response. Optional lens steering: "lens: <name>" anywhere in a prompt; "lens: off" to unlock.');
+  lines.push('MANDATES: begin the response with the v22 runtime header — [lens:name] [goal:locked|open] [assump:N] [conf:H/M/L] [pos:held/moved|basis] — facts only, per Rule 2. Default to brief — expand only when asked. On any state-change trigger (goal, variable lock, assumption open/close, position, threads, decision) write decision-locks to Notion when available and update the state file via the Write tool — max one write per response. Lens steering: "lens: <name>" anywhere in a prompt; "lens: off" to unlock.');
 
   out({
     hookSpecificOutput: {

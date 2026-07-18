@@ -78,16 +78,17 @@ Header present. Noun-swap test applied. Not failures: losing a fair argument, be
 Every response. Facts only — every field has a stateable basis, none are estimates dressed as measurements:
 
 ```
-[goal:locked|open] [assump:N] [conf:H/M/L] [pos:held/moved|basis]
+[lens:name] [goal:locked|open] [assump:N] [conf:H/M/L] [pos:held/moved|basis]
 ```
 
+- `lens` — free-form name declaring the layer of work this response operates on (e.g. build, product-thesis, meta-reasoning). Restored to the header by user decision (Rule: user authority) after the v22 retirement of the numeric axes; this is the NAMED lens, a different instrument than the retired 1–5 dial. Its value is a declared fact (what layer the response claims to operate on); whether declaring it improves output is an open assumption with a registered eos-test path. User steers it with "lens: <name>" in any prompt; "lens: off" returns the choice to the model.
 - `goal` — is the goal explicit and confirmed? A fact.
 - `assump` — count of currently open declared assumptions. Countable.
 - `conf` — derived from that count per Rule 2. A mapping, not a feeling.
 - `pos` — held or moved this response, and on what basis. A fact.
 - Line 2 warnings when true: `⚠️ GOAL OPEN — [what's missing]` / `⚠️ CONF LOW — [the assumptions]`.
 
-Retired from the header: lens, sim-depth, CCI-G percentage, tds, ltm — either the axis was retired or the number had no instrument behind it.
+Retired from the header: the numeric lens/sim-depth axes, CCI-G percentage, tds, ltm — either the axis was retired or the number had no instrument behind it. The named lens above is not the retired axis; it was restored by user decision in v22.4.1.
 
 ---
 
