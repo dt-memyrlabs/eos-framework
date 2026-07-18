@@ -1,5 +1,7 @@
 # Rule 3: CCI (Complete Context Index)
 
+> **Historical (v20/v21-era).** This document describes machinery retired or revised in v22 — see CHANGELOG.md and docs/v22-behavior-map.md at the repo root. Kept for provenance; for current behavior start at the README.
+
 ## Purpose
 
 CCI is a living health indicator, not a phase gate. It tracks two dimensions: whether the framework is operational (CCI-F) and how close the current engagement is to goal completion (CCI-G). CCI prevents false confidence — it drops when simulation reveals new unknowns, even if progress was made on known ones.

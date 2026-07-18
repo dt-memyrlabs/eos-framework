@@ -1,5 +1,7 @@
 # USER MODEL
 
+> **Historical (v20/v21-era).** This document describes machinery retired or revised in v22 — see CHANGELOG.md and docs/v22-behavior-map.md at the repo root. Kept for provenance; for current behavior start at the README.
+
 The USER MODEL occupies Position 1 in token ordering. Every downstream token -- Identity, Architecture, Rules, and generated responses -- attends to it first and is interpreted through it. It is the primary attention target for generation.
 
 ## Template Fields

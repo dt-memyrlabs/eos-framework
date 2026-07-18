@@ -1,5 +1,7 @@
 # State Storage
 
+> **Historical (v20/v21-era).** This document describes machinery retired or revised in v22 — see CHANGELOG.md and docs/v22-behavior-map.md at the repo root. Kept for provenance; for current behavior start at the README.
+
 EOS uses a 3-tier state storage system. Tier detection is a HARD GATE at session start -- no substantive output until the active tier is established. The `eos-memory-mgmt` skill runs M1 to classify.
 
 ## Tier A: Notion (Primary)

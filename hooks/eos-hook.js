@@ -1,13 +1,19 @@
 #!/usr/bin/env node
-// EOS v21 hook dispatcher — deterministic state injection + user lens steering.
-// Replaces eos-session-start.sh / eos-precompact.sh / eos-session-end.sh, which
-// depended on python3 (resolves to the Microsoft Store stub on this machine).
+// EOS v22 hook dispatcher — deterministic state injection + user lens steering.
+// Replaces the bash state hooks (eos-session-start.sh / eos-precompact.sh /
+// eos-session-end.sh), which had two fatal flaws: they injected via systemMessage
+// (displays to the human; never reaches model context — additionalContext does),
+// and they depended on python3 (on Windows this often resolves to the Microsoft
+// Store stub, which prints "Redirecting..." instead of executing).
 // Usage: node eos-hook.js <prompt|session-start|pre-compact|session-end>
 //
-// Lens steering (UserPromptSubmit): the user writes "lens: <name>" (or /lens <name>,
-// lens=<name>) anywhere in a prompt to steer + lock the lens. "lens: off|free|unlock|auto"
-// returns lens choice to the model. The directive is persisted to the state file BEFORE
-// the model sees the prompt, and the injection tells the model to generate under it.
+// Lens steering (UserPromptSubmit, OPTIONAL — untested feature, see changelog):
+// the user writes "lens: <name>" (or /lens <name>, lens=<name>) anywhere in a
+// prompt to steer + lock a free-form layer-of-work label. "lens: off|free|unlock|auto"
+// returns the choice to the model. The directive is persisted to the state file
+// BEFORE the model sees the prompt. Mechanism: explicit injected instruction —
+// no claim about token position is made (the position-dominance theory was
+// refuted in the 2026-07-14 experiment; specificity, not position).
 
 const fs = require('fs'), os = require('os'), path = require('path');
 
@@ -79,15 +85,15 @@ process.stdin.on('end', () => {
   }
 
   const lines = [];
-  lines.push(`EOS RUNTIME v21 (deterministic ${EVENT === 'prompt' ? 'per-prompt' : 'session-start'} injection):`);
+  lines.push(`EOS RUNTIME v22 (deterministic ${EVENT === 'prompt' ? 'per-prompt' : 'session-start'} injection):`);
   if (state) {
     lines.push(`state: ${JSON.stringify(state)}`);
-    lines.push(`lens: ${state.lens || 'unset'}${state.lens_locked_by_user ? ' [USER-LOCKED — hold until the user sends "lens: off" or steers a new value]' : ' [free choice — pick and declare]'}`);
+    if (state.lens) lines.push(`lens: ${state.lens}${state.lens_locked_by_user ? ' [USER-LOCKED — hold until the user sends "lens: off" or steers a new value]' : ' [free choice]'}`);
   } else {
     lines.push('state: none — fresh session. Initialize ~/.claude/eos-state/current-state.json on first state-change event.');
   }
   if (steer) lines.push(steer);
-  lines.push('MANDATES: begin the response with the EOS runtime header. On any state-change trigger (lens, goal, variable lock, position, threads, decision) update the state file via the Write tool — max one write per response. User steering syntax: "lens: <name>" anywhere in a prompt; "lens: off" to unlock.');
+  lines.push('MANDATES: begin the response with the v22 runtime header — [goal:locked|open] [assump:N] [conf:H/M/L] [pos:held/moved|basis] — facts only, per Rule 2. Default to brief — expand only when asked. On any state-change trigger (goal, variable lock, assumption open/close, position, threads, decision) write decision-locks to Notion when available and update the state file via the Write tool — max one write per response. Optional lens steering: "lens: <name>" anywhere in a prompt; "lens: off" to unlock.');
 
   out({
     hookSpecificOutput: {

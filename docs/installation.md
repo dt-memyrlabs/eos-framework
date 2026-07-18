@@ -1,5 +1,7 @@
 # Installation
 
+> **Historical (v20-era setup).** These instructions install the v20/v21 stack (18+ skills, lens/sim-depth controls, the old 7-field header). For current v22 setup — kernel plus the optional eos-feedback-loops skill — use the Quick start in the repo README. Kept for provenance.
+
 Platform-specific setup for EOS v20.1.0.
 
 ---
@@ -179,7 +181,7 @@ After installation, verify the setup:
 
 2. **Start a conversation.** The first response should include a runtime header:
    ```
-   [lens:goal-framing] [sim-d:3] [CCI-G:n/a] [sim:M] [pos:held|basis:init] [tds:off] [ltm:--]
+   [lens:4] [sim-d:3] [CCI-G:n/a] [sim:M] [pos:held|basis:init] [tds:off] [ltm:--]
    ```
 
 3. **Check persistence tier.** The `eos-memory-mgmt` skill runs M1 at session start and reports detected tier. If you set up Notion and it reports Tier C, check your MCP connection.

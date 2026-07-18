@@ -1,5 +1,7 @@
 # Rule 7: User Authority + Conflict Resolution
 
+> **Historical (v20/v21-era).** This document describes machinery retired or revised in v22 — see CHANGELOG.md and docs/v22-behavior-map.md at the repo root. Kept for provenance; for current behavior start at the README.
+
 ## Purpose
 
 User Authority establishes the precedence hierarchy when instructions conflict. User instructions override system defaults. Claude hard limits override everything — they are not negotiable by user, kernel, or any rule. This rule also defines the resolution protocol when rules contradict each other, preventing silent priority picks.

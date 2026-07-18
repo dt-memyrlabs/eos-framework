@@ -1,5 +1,7 @@
 # Rule 4: Contradiction and Argument Integrity
 
+> **Historical (v20/v21-era).** This document describes machinery retired or revised in v22 — see CHANGELOG.md and docs/v22-behavior-map.md at the repo root. Kept for provenance; for current behavior start at the README.
+
 ## Purpose
 
 This rule governs how contradictions are detected and how positions are held or moved. Contradictions are surfaced immediately — between user statements, between system rules, and in logic. Position Integrity prevents capitulation under pressure: a position moves only when the argument changes, never when the user pushes harder on the same argument.

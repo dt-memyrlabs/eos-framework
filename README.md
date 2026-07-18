@@ -1,260 +1,112 @@
-# EOS -- Enlightened Operating System v21.1.0
+# EOS -- Enlightened Operating System v22.0.0
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-A prompt engineering framework that shapes Claude's behavior through structured context displacement. v21 adds compaction-surviving state persistence via hooks and an architecturally forked slim kernel. v21.1 makes the hooks actually deliver it — a working Node dispatcher, per-prompt state injection, and deterministic user lens steering.
+A small, evidence-tested prompt framework for Claude. One kernel file, five rules, a prose user model, and a published falsification test that cut the framework down to what it could prove -- including the parts the test killed.
 
 ---
 
 ## What is EOS?
 
-Large language models generate from training priors by default. Every response pattern-completes from the statistical distribution the model learned during training. Rules and system instructions attempt to filter this output after the fact -- but the generation frame is already set before any rule fires.
+Large language models answer for an implied average user by default. EOS fixes that with one mechanism: **a specific, maintained, prose description of who you are and what you're working on**, loaded as system context, plus a small ruleset that forces the model to declare assumptions, hold positions against pressure, and refuse decoration.
 
-EOS takes a different approach: **context-staging**. Instead of filtering outputs, EOS displaces the generation frame itself by loading specific user context into the attention window before anything else. The model's causal attention is unidirectional -- each token attends only to tokens before it. By positioning user-specific context (domain expertise, methodology, vocabulary, project state) ahead of identity declarations and rules, the weights pattern-complete from that context rather than from generic training priors.
+That's the whole framework now. It used to be more. v21 had 22 skill modules, two numbered control axes, a 7-field runtime dashboard, and a theory about attention-window ordering. v22 is what survived testing.
 
-The result: responses that reflect the user's actual operating environment instead of the model's parametric defaults.
+## The evidence
 
-### How it works
+On 2026-07-14 the framework's registered falsification test was run -- 24 controlled generations across 8 real tasks and 3 conditions, scored by 32 hypothesis-blind judges. Full design, data, and limitations: [docs/experiments/2026-07-14-user-model-falsification.md](docs/experiments/2026-07-14-user-model-falsification.md).
 
-EOS has three layers:
+Two results, one flattering and one not:
 
-1. **Kernel** (`CLAUDE.md`) -- loaded as system instructions. Contains the USER MODEL, identity declarations, compressed rule summaries, state recovery protocol, and hook declarations. Token ordering enforced: USER MODEL before Identity before Architecture before Rules. v21 slim core: ~176 lines / ~2,800 tokens (down from 545 lines / ~10,400 tokens).
+1. **The core bet holds.** A populated user model beat no user context in 11 of 12 blind judgments -- specificity 7.9 vs 3.3, quality 8.5 vs 8.0, zero context pollution, and 0% of personalized answers passed the noun-swap test (would work verbatim for anyone) vs 67% of generic ones. Specific user context measurably displaces generic output at no quality cost.
+2. **The framework's own format lost.** The same facts written as a plain prose paragraph beat the structured labeled-field USER MODEL in 14 of 16 judgments, on both specificity and quality. The format was weight; the facts are the value.
 
-2. **Skills** -- 22 modular files that activate on specific triggers (user keywords, state transitions, metric thresholds). Each skill has its own lifecycle and references kernel rules without duplicating them. v21 adds 4 reference skills that carry full rule text, lens/sim-depth tables, runtime params, and subagent boundaries extracted from the kernel.
+v22 acts on both: the user model is prose, and the machinery that sat on top of the format -- control axes, the CCI percentage, the mandatory skill system -- is retired. Every cut is enumerated and reversible: [docs/v22-behavior-map.md](docs/v22-behavior-map.md).
 
-3. **Hooks** -- Scripts that fire on Claude Code lifecycle events (UserPromptSubmit, SessionStart, PreCompact, SessionEnd). v21.1 replaces the bash state hooks with a single Node dispatcher (`eos-hook.js`) that injects EOS state into model context on **every prompt** -- the rules stop depending on model attention -- and lets the user steer the lens deterministically by typing `lens: <name>` in any message.
+Small print, stated up front: n = 8 tasks, one run, Claude judging Claude. Directional evidence that shaped defaults, not laws. The experiment doc carries the full limitations and the criterion for re-adding structure (re-test it first).
 
-### What it looks like in practice
+## What's in the kernel
 
-Every EOS response begins with a mandatory runtime header:
+The kernel ([kernel/CLAUDE.md](kernel/CLAUDE.md), ~100 lines) contains:
 
-```
-[lens:build] [sim-d:3] [CCI-G:65%] [sim:M] [pos:held|basis:constraint-graph] [tds:on] [ltm:2]
-```
+- **Two axioms.** No assumptions without falsification criteria; truth over compliance, appearance, and convention.
+- **USER MODEL** -- the load-bearing section. Prose, specific, maintained. The template tells you what to cover; the experiment tells you why prose.
+- **Identity** -- reasoning partner stance, a 4-question truth gate on every response, plain language, and hard bans on consultantspeak, padding, flattery, and hedging.
+- **Five rules:**
 
-This is not decoration. Each field is a live diagnostic:
+| # | Rule | One line |
+|---|------|----------|
+| 1 | Goal Lock | The goal is the only fixed point; nothing starts without one. |
+| 2 | Grounding | Assumptions declared with falsification criteria; constraints classified; confidence derived from open-assumption count; numbers measured or labeled unmeasured -- never fabricated. |
+| 3 | Contradiction & Position Integrity | Flag contradictions immediately; positions move on argument, never on pressure. |
+| 4 | Regression Lock | Resolved is locked; re-opening requires new evidence. |
+| 5 | Output Integrity | Noun-swap test; header present. |
 
-| Field | Meaning |
-|-------|---------|
-| `lens:build` | Lens -- free-form name declaring the layer of work this response operates on. Steerable by the user via `lens: <name>` in any prompt (v21.1). The numeric prior-displacement setting is now the Displacement Dial (`dial to N`) |
-| `sim-d:3` | Simulation Depth -- trajectory enumeration depth |
-| `CCI-G:65%` | Complete Context Index (Goal Progress) -- percentage toward goal convergence |
-| `sim:M` | Simulation confidence -- HIGH / MEDIUM / LOW |
-| `pos:held\|basis:...` | Position integrity -- whether the model held or moved its position, and why |
-| `tds:on` | Tangent Drift Score -- active drift monitoring |
-| `ltm:2` | Exchanges since last persistence write |
+- **Runtime header** -- reduced to facts: `[goal:locked|open] [assump:N] [conf:H/M/L] [pos:held/moved|basis]`. Goal state is a fact, the assumption count is countable, confidence is a stated mapping from that count, position is a fact. The old dashboard fields (lens, sim-depth, CCI-G percentage) are gone: either the axis was retired or the number had no instrument behind it.
+- **Lessons** -- every user correction is written to `tasks/lessons.md` immediately and loaded at session start.
+- **Builder mode, state storage, workflow discipline** -- one short section each.
 
----
+## Testing changes: the harness
 
-## Control Axes
+[tools/eos-test.md](tools/eos-test.md) is the 2026-07-14 experiment turned into a reusable rig. Give it any two context variants (user model on/off, prose vs structured, current kernel vs proposed kernel, stale vs fresh) and a task battery; it generates blind-judged scorecards using the same design as the published experiment. Pre-registration is enforced in code — the script refuses to run without a hypothesis and pass/fail criteria — and a `dryRun` mode prints the agent count and token estimate (roughly 0.5M tokens quick / 1.4M standard) before anything is spent.
 
-EOS exposes three independent controls that the user adjusts in conversation: the lens (named layer of work, `lens: <name>`), the Displacement Dial (prior mixing, `dial to N`), and Simulation Depth (`sim N`).
+This backs the kernel's measured-delta rule: **no kernel change ships without a result from this harness.** Version bumps are experiment outcomes now.
 
-### Displacement Dial (1--5)
+## What about the 22 skills?
 
-Controls the balance between training priors and user context in generation. Formerly "Context Lens" -- renamed in v21.1 when the lens slot became a named layer-of-work declaration.
+The legacy 22 remain in [skills/](skills/) as **optional extensions** -- the kernel no longer mandates, discovers, or depends on them, and 14 carry in-file legacy notices for referencing retired machinery. A content audit (v22.2) found four distinct ideas worth keeping; they are consolidated into the one v22-native skill:
 
-| Dial | Name | Behavior |
-|------|------|----------|
-| 1 | Raw Prior | Pure training distribution output. No displacement. Diagnostic mode. |
-| 2 | Prior-Visible | Conventional output generated first, then user-context alternative alongside it. |
-| 3 | Balanced | Both conventional and user-context paths fully developed and compared. |
-| 4 | User-Led (default) | User context dominant. Convention named in one line, then bypassed. |
-| 5 | Full Displacement | Maximum user context saturation. Convention gets zero tokens. |
+- **[`skills/quality/eos-feedback-loops.md`](skills/quality/eos-feedback-loops.md)** -- feedback loops on the collaboration itself: rejection pattern mining (what you consistently reject reveals unstated constraints), a prediction ledger with accuracy review (does what the model predicts come true?), reversibility tagging, a countable correction ledger, and the invitation-over-extraction probe technique.
 
-### Simulation Depth (1--7)
+Everything else was control machinery, platform-superseded, or generic -- the same verdict the experiment gave the kernel.
 
-Controls how many trajectories are explored and how hard each is tested.
-
-| Depth | Name | Behavior |
-|-------|------|----------|
-| 1 | Surface | Single trajectory, confidence tag only. |
-| 2 | Scan | Two trajectories, one failure mode each. |
-| 3 | Standard (default) | All viable trajectories. One failure mode + one constraint test per path. |
-| 4 | Deep | All trajectories. Two or more failure modes each. Assumptions stress-tested. |
-| 5 | Adversarial | Generate strongest counterargument to recommendation. Survives or dies. |
-| 6 | Monte Carlo | Constraint graph sweep. Simulate relaxing each locked constraint. |
-| 7 | Exhaustive | All of the above. Every assumption falsification-tested. |
-
----
-
-## Rules
-
-EOS has 10 operational rules. Each handles a specific mechanical concern.
-
-| # | Rule | Purpose |
-|---|------|---------|
-| 1 | Goal Lock | Goal is the only fixed point. Verified on frame shifts. Nothing starts without a clear goal. |
-| 2 | Generation Frame | Generation starts from USER MODEL. Priors are reference data, not the generation seed. |
-| 3 | CCI (Complete Context Index) | Living health indicator tracking goal progress and framework readiness. |
-| 4 | Contradiction | Contradictions between user statements or system rules are flagged immediately. Position held until the argument changes, not the pressure. |
-| 5 | Regression Lock | Resolved variables stay locked. No re-opening without new evidence. |
-| 6 | Autonomy Tiers | Three tiers controlling what the system does autonomously vs. what requires user confirmation. |
-| 7 | User Authority | User instructions override defaults. Hard limits are not overridable. Conflict resolution protocol. |
-| 8 | Operational Empathy | Work on the problem with the user, not observe them working on it. Context-level probing over surface-level questions. |
-| 9 | Context Limit Monitor | Tracks context window usage. 70% triggers state dump. 90% closes threads. |
-| 10 | Output Integrity | Noun-swap test: if the output works for any user with different nouns, it is prior-derived. Regenerate from USER MODEL. |
-
----
-
-## Skills
-
-22 skill modules organized in 7 categories. Each activates on specific triggers and operates within kernel rule boundaries.
-
-### Lifecycle
-- `eos-cold-start` -- New project creation and initialization
-- `eos-goal-framing` -- Goal extraction, feasibility thesis, dimension prioritization
-- `eos-project-mgmt` -- Project state tracking, limiter analysis, C5 outcome tracking (prediction capture, matching, accuracy analysis)
-
-### Build
-- `eos-builder` -- Artifact-first output mode with condensed simulation
-
-### Memory
-- `eos-memory-mgmt` -- Persistence tier detection, Notion writeback policy, M1.5 skill compatibility breach protocol
-- `eos-memex` -- Context compression with indexed archive and retrieval
-- `eos-recall-router` -- Routes recall queries to the correct persistence tier with cross-layer dedup
-
-### Reasoning
-- `eos-contradiction` -- Dialectic contradiction handling, re-entry after rejection, C7 pattern mining (extracts hidden constraints from rejection history)
-- `eos-constraint-graph` -- Constraint classification, dependency mapping, cascade unlocking, G2.6 minimization query (minimum constraint relaxation set)
-- `eos-dimension-ambiguity` -- Handles ambiguous responses during dimension probing
-- `eos-rules-reference` -- Full verbose Rules 1-10 text (extracted from kernel in v21 for on-demand loading)
-- `eos-lens-simdepth` -- Lens (named), Displacement Dial and Simulation Depth reference
-
-### Quality
-- `eos-metacognition` -- F0 early warning (passive 7-signal degradation monitor), F1-F2 diagnostics, F3 rule patching with anti-churn check, F4 cross-session lessons via `tasks/lessons.md`
-- `eos-fact-check` -- Claim verification against available evidence
-- `eos-voice-extract` -- Session voice extraction with V2 cross-layer deduplication (checks auto-memory, Notion, Pieces before writing)
-- `tangent-drift-score` -- Goal drift detection with context-specific sarcastic redirects
-
-### Output
-- `eos-report` -- Structured deliverable generation with multi-source cross-referencing
-
-### System
-- `eos-collaboration` -- Multi-user session coordination and attribution
-- `eos-multi-agent` -- 7-phase agent lifecycle: pre-flight, recon, decomposition, deployment, Phase 3.5 cross-agent validation, consolidation, Phase 4.5 reconciliation audit
-- `eos-kernel-updater` -- Kernel self-modification with Step 1.5 patch churn detection (3+ patches on same rule triggers structural review)
-- `eos-runtime-params` -- Full runtime parameters reference table
-- `eos-autonomy-boundaries` -- Subagent execution boundaries and tool budget enforcement
-
----
-
-## Operating Modes
-
-### Builder Mode
-
-Activated by "let's build," "start coding," or "build mode on." Output shifts to artifacts -- code, documents, deliverables. Clarifying questions suppressed except genuine blockers. Simulation condensed to one-line confidence notes. Runtime header still required.
-
-### Situational Awareness
-
-EOS operates as a persistent partner across all active work. On any task: checks the active project landscape, maps tasks to the right project, surfaces cross-project conflicts, triages random input to the right branch.
-
-### Cross-Session Learning
-
-`tasks/lessons.md` captures self-correcting rules from every user correction. Loaded at session start as behavioral constraints. Written immediately on correction (not batched). 3+ occurrences across distinct sessions escalates to structural review.
-
----
-
-## Quick Start
-
-### 1. Copy the kernel
+## Quick start
 
 ```bash
 cp kernel/CLAUDE.md ~/.claude/CLAUDE.md
 ```
 
-### 2. Copy skills
+Then edit the USER MODEL section: replace the template block with 5-12 prose sentences about yourself, your methods, your environment, and your active projects. That edit is most of the value of this framework -- the experiment says so. Skills and hooks are optional; see below.
 
-```bash
-cp -r skills/ ~/.claude/skills/
-```
+## Hooks (optional, independently useful)
 
-### 3. Validate
+EOS ships one Node dispatcher for state persistence (four lifecycle events) and three bash safety/quality hooks. They work with or without the kernel:
 
-```bash
-bash tools/validate-skills.sh
-```
+| Hook | Event | Purpose |
+|------|-------|---------|
+| `eos-hook.js prompt` | UserPromptSubmit | Injects state + v22 header mandates into model context on every prompt; parses optional `lens:` steering |
+| `eos-hook.js session-start` | SessionStart | Injects state file content on session start / post-compaction |
+| `eos-hook.js pre-compact` | PreCompact | Backs up EOS state file before context compaction |
+| `eos-hook.js session-end` | SessionEnd | Final state backup on session close |
+| `credential-guard.sh` | PreToolUse | Blocks Write/Edit on `.env`, credential files, private keys |
+| `file-backup.sh` | PreToolUse | Timestamped backup before file mutations |
+| `search-year-fix.sh` | PreToolUse | Appends current year to web searches |
 
-### 4. Start a conversation
-
-Open Claude Code or claude.ai. EOS activates automatically. You will see a runtime header on every response and the system will ask for a goal before substantive work begins.
-
-See [docs/quick-start.md](docs/quick-start.md) for a detailed walkthrough. See [docs/installation.md](docs/installation.md) for platform-specific setup.
-
----
+Note: Claude Code now ships native auto-memory and compaction-surviving summaries, which overlap the state-persistence hooks. The hooks remain the schema-controlled durable copy; expect them to shrink as the platform absorbs the job. The pre-v22.4 bash state hooks were replaced — they injected via `systemMessage` (never reaches model context) and depended on `python3` (a Store stub on many Windows machines), so state recovery never actually functioned. See [hooks/README.md](hooks/README.md).
 
 ## Structure
 
 ```
 eos-framework/
-  kernel/
-    CLAUDE.md              # Slim kernel (~176 lines). System instructions loaded at session start.
-  skills/
-    lifecycle/             # Cold start, goal framing, project management
-    build/                 # Artifact construction
-    memory/                # Persistence, recall, knowledge graph
-    reasoning/             # Contradiction, constraints, ambiguity, rules reference, lens/sim-depth
-    quality/               # Metacognition, fact-check, voice, drift
-    output/                # Report generation
-    system/                # Collaboration, multi-agent, kernel updates, runtime params, boundaries
+  kernel/CLAUDE.md          # The framework. ~100 lines.
   docs/
-    architecture.md        # Deep-dive on context-staging philosophy
-    installation.md        # Platform-specific setup instructions
-    quick-start.md         # 5-minute setup guide
-    skill-authoring.md     # How to write new skills
-  hooks/
-    eos-hook.js            # Node dispatcher: per-prompt state injection + lens
-                           #   steering, session-start injection, compaction backup
-    credential-guard.sh    # Blocks edits to .env / credential files
-    file-backup.sh         # Auto-snapshots before file mutations
-    search-year-fix.sh     # Appends current year to web searches
-  tools/
-    validate-skills.sh     # Validates skill integrity against kernel
+    experiments/            # Falsification tests: design, data, limitations
+    v22-behavior-map.md     # Every v21 behavior -> kept / retired / optional, with basis
+    architecture.md         # Background (v21-era; superseded where it conflicts with experiments/)
+    rules/                  # v21-era rule deep-dives (historical)
+    concepts/               # v21-era concept docs (historical)
+  skills/                   # 22 optional extension modules (untested individually)
+  hooks/                    # Claude Code lifecycle hooks
+  tools/validate-skills.sh
   examples/
-    user-config/           # Example USER MODEL configurations
-    memory/                # Example persistence tier setups
 ```
 
----
+## Known issues
 
-## Documentation
-
-- [Architecture](docs/architecture.md) -- Context-staging philosophy, token ordering, compression prohibition
-- [Installation](docs/installation.md) -- Platform-specific setup for Claude Code and claude.ai
-- [Quick Start](docs/quick-start.md) -- 5-minute setup and first conversation
-- [Skill Authoring](docs/skill-authoring.md) -- How to write new EOS skills
-- [Hooks](hooks/README.md) -- Safety and quality hooks for Claude Code
-
----
-
-## Hooks
-
-EOS ships one Node dispatcher for state persistence (v21.1) and three bash hooks for safety/quality:
-
-| Hook | Event | Purpose |
-|------|-------|---------|
-| `eos-hook.js prompt` | UserPromptSubmit | Injects EOS state + mandates into model context on every prompt; parses `lens: <name>` steering directives before the model sees the message |
-| `eos-hook.js session-start` | SessionStart | Injects state file content on session start and post-compaction reload |
-| `eos-hook.js pre-compact` | PreCompact | Backs up EOS state file before context compaction, injects recovery message |
-| `eos-hook.js session-end` | SessionEnd | Final state backup on session close |
-| `credential-guard.sh` | PreToolUse | Blocks Write/Edit on `.env`, credential files, private keys |
-| `file-backup.sh` | PreToolUse | Creates timestamped backup before any file mutation |
-| `search-year-fix.sh` | PreToolUse | Appends current year to web searches for fresh results |
-
-See [hooks/README.md](hooks/README.md) for installation instructions -- including the two failure modes that silently disabled the v21.0 hooks (top-level registration outside the `"hooks"` key, and `python3` resolving to the Microsoft Store stub on Windows).
-
----
-
-## Known Issues
-
-- **Pieces LTM reference drift.** Pieces MCP supplementary writes can drift from Notion state over long sessions. Notion is authoritative when they conflict. Pieces is a convenience layer, not a source of truth.
-- **Context window pressure.** The slim kernel is approximately 2,800 tokens (~176 lines). v21 reduced this from ~10,400 tokens by moving verbose content to on-demand skill files. The Context Limit Monitor (Rule 9) manages context pressure, but users in extended sessions should monitor the `ltm` counter in the runtime header.
-- **Skill module loading.** On claude.ai (non-Code), skill loading depends on the Projects feature placing files in `/mnt/skills/user/`. Verify paths if skills are not triggering.
-- **State injection field (resolved in v21.1).** The v21.0 hooks injected state via `systemMessage`, which only displays to the human -- the model never received it. v21.1 uses `hookSpecificOutput.additionalContext`, which reaches model context. Injection arrives adjacent to the user's message via UserPromptSubmit, after the cached system-prompt prefix.
-- **Compaction survival is best-effort.** The state file captures what the model wrote during the conversation. If the model fails to write state on a change event, that state is lost. The PreCompact hook warns on stale state (>5min).
-
----
+- **The evidence is thin.** One experiment, 8 tasks, one model family generating and judging. It was enough to cut untested machinery; it is not enough to call anything proven. More runs, more domains, and a non-Claude judge would all strengthen or overturn it.
+- **Skills are unvalidated and all legacy.** None has been individually tested, every one declares a pre-v22 `kernel_compat`, and 14 of 22 reference machinery v22 retired (those carry an in-file `v22 status: legacy` notice — loading one may reintroduce retired behavior). `tools/validate-skills.sh` reports the current state. Treat them as a library of drafts; revalidate with the harness before promoting any to v22.
+- **Native platform memory keeps moving.** Sections of this framework will keep becoming redundant as Claude Code absorbs persistence. That is fine. The durable core is the ruleset, not the plumbing.
 
 ## License
 
-Apache License 2.0. See [LICENSE](LICENSE) for details.
+Apache License 2.0. See [LICENSE](LICENSE).

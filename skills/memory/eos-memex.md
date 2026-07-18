@@ -15,6 +15,8 @@ description: >
   with no accumulated evidence.
 ---
 
+> **v22 status: legacy.** This skill predates the v22 evidence release and references machinery the kernel retired (see `docs/v22-behavior-map.md`) — lens/sim-depth axes, CCI scoring, or v21 rule numbering. It still loads as a standalone extension, but using it may reintroduce retired behavior. Revalidate against the v22 kernel before updating `kernel_compat`.
+
 # EOS Memex — Indexed Experience Memory
 
 ## What This Skill Does
@@ -214,7 +216,7 @@ Append this block to working context. It persists until session end.
 When this skill is active, extend the runtime header:
 
 ```
-[lens:research] [CCI-G:X%] [sim:H] [pos:held|—] [tds:on] [ltm:X] [memex:active|N indexed]
+[lens:4] [CCI-G:X%] [sim:H] [pos:held|—] [tds:on] [ltm:X] [memex:active|N indexed]
 ```
 
 `N indexed` = number of entries in current index map.

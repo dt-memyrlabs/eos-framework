@@ -1,5 +1,7 @@
 # Quick Start
 
+> **Historical (v20-era setup).** These instructions install the v20/v21 stack (18+ skills, lens/sim-depth controls, the old 7-field header). For current v22 setup — kernel plus the optional eos-feedback-loops skill — use the Quick start in the repo README. Kept for provenance.
+
 Get EOS running in 5 minutes.
 
 ---
@@ -38,7 +40,7 @@ Open Claude Code or start a new conversation in your claude.ai Project.
 **Runtime header on every response.** The first thing you see:
 
 ```
-[lens:goal-framing] [sim-d:3] [CCI-G:n/a] [sim:M] [pos:held|basis:init] [tds:off] [ltm:--]
+[lens:4] [sim-d:3] [CCI-G:n/a] [sim:M] [pos:held|basis:init] [tds:off] [ltm:--]
 ```
 
 This is the system's live diagnostic state. It appears on every response without exception.
@@ -58,11 +60,11 @@ This is the system's live diagnostic state. It appears on every response without
 
 Adjust the two axes during conversation:
 
-- `"dial 2"` -- See what the training prior wants to produce alongside the user-context output. Diagnostic mode.
-- `"dial 5"` -- Full displacement. Convention gets zero tokens.
+- `"lens 2"` -- See what the training prior wants to produce alongside the user-context output. Diagnostic mode.
+- `"lens 5"` -- Full displacement. Convention gets zero tokens.
 - `"sim 5"` or `"adversarial"` -- Generate the strongest counterargument to the current recommendation. It survives or it dies.
 - `"sim 7"` or `"exhaustive"` -- Maximum trajectory depth. Every assumption falsification-tested.
-- `"dial down"` -- Reduce the dial toward training priors.
+- `"dial down"` -- Reduce lens toward training priors.
 - `"go deeper"` -- Increase simulation depth.
 
 ## 6. Populate the USER MODEL (when ready)

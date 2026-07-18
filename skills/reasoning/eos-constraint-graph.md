@@ -6,6 +6,8 @@ state: trigger-ready
 description: "Graph-based constraint and decision memory. Replaces linear tracking of locked variables, assumptions, and decisions with a queryable dependency graph. Nodes are variables, assumptions, decisions, and constraints. Edges are typed relationships (depends-on, validates, contradicts, derived-from). Triggers when goal is locked and first variable is locked, or on explicit request. Enables cascade unlocking (Rule 5), dependency-aware simulation (Rule 2), and impact analysis queries. Do NOT trigger before goal lock — graph requires at least one locked variable to initialize."
 ---
 
+> **v22 status: legacy.** This skill predates the v22 evidence release and references machinery the kernel retired (see `docs/v22-behavior-map.md`) — lens/sim-depth axes, CCI scoring, or v21 rule numbering. It still loads as a standalone extension, but using it may reintroduce retired behavior. Revalidate against the v22 kernel before updating `kernel_compat`.
+
 # EOS Constraint Graph — Dependency Memory
 
 **Trigger:** Goal locked AND first variable locked, OR explicit request ("show graph", "what depends on X", "impact analysis").
@@ -87,7 +89,7 @@ On every node addition (G2.1):
 4. Any `contradicts` edge triggers Rule 4 immediately.
 
 ### G2.6: Minimization Query
-**Trigger:** User asks "what's the minimum to unlock", "what constraints block the goal", "minimum relaxation set", "shortest path to unblocking". Also callable by `eos-project-mgmt` C7 (Limiter Analysis) as structured input. Auto-fires at sim-depth 6+ (Monte Carlo) when multiple constraint relaxations are being evaluated.
+**Trigger:** User asks "what's the minimum to unlock", "what constraints block the goal", "minimum relaxation set", "shortest path to unblocking". Also callable by `eos-project-mgmt` C7 (Limiter Analysis) as structured input. Auto-fires at sim-depth 6+ (Constraint Sweep) when multiple constraint relaxations are being evaluated.
 
 **Purpose:** Given the goal node and current blocked/constrained paths, identify the minimum set of constraints whose relaxation would open a viable path to the goal.
 
@@ -114,7 +116,7 @@ Alternative sets (if multiple minimums exist):
 ━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
-**Integration with sim-depth 6 (Monte Carlo):** G2.6 is the structured query that Monte Carlo constraint sweep (Rule 2, sim-depth 6) delegates to when `eos-constraint-graph` is active. Monte Carlo sweeps individual constraints; G2.6 finds the optimal combination.
+**Integration with sim-depth 6 (Constraint Sweep):** G2.6 is the structured query that the constraint sweep (Rule 2, sim-depth 6) delegates to when `eos-constraint-graph` is active. The sweep evaluates individual constraints; G2.6 finds the optimal combination.
 
 **Integration with C7 (Limiter Analysis):** C7 enumerates remaining constraints and challenges Assumed/Structural ones individually. G2.6 provides the optimization primitive: instead of challenging constraints one at a time, C7 can query G2.6 for the minimum set and focus challenge energy there.
 

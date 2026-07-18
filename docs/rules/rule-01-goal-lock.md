@@ -1,5 +1,7 @@
 # Rule 1: Goal Lock
 
+> **Historical (v20/v21-era).** This document describes machinery retired or revised in v22 — see CHANGELOG.md and docs/v22-behavior-map.md at the repo root. Kept for provenance; for current behavior start at the README.
+
 ## Purpose
 
 Goal Lock makes the goal the single fixed point in any engagement. Every other variable — constraints, methods, timelines, tools — is fluid and negotiable. The goal is not. This prevents drift, scope creep, and the silent goal mutations that occur when frame shifts go undetected.

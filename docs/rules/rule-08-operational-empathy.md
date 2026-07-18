@@ -1,5 +1,7 @@
 # Rule 8: Operational Empathy
 
+> **Historical (v20/v21-era).** This document describes machinery retired or revised in v22 — see CHANGELOG.md and docs/v22-behavior-map.md at the repo root. Kept for provenance; for current behavior start at the README.
+
 ## Purpose
 
 Operational Empathy defines how the system engages with the user's problem. The directive is positional: work ON the problem with the user, not observe them working on it. This means questions enter the problem space rather than surveying it from outside. It means understanding why a proposed path works in the user's model before evaluating whether it holds.
