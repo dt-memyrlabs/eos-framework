@@ -1,8 +1,53 @@
 {
-  "_comment": "Merge these entries into your ~/.claude/settings.json or .claude/settings.local.json",
+  "_comment": "Merge these entries into your ~/.claude/settings.json or .claude/settings.local.json. Everything goes under the top-level \"hooks\" key — hooks registered outside it are silently ignored.",
   "_docs": "https://code.claude.com/docs/en/hooks",
 
   "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$HOME/.claude/scripts/eos-hook.js\" prompt",
+            "timeout": 10,
+            "statusMessage": "EOS state injection"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$HOME/.claude/scripts/eos-hook.js\" session-start",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$HOME/.claude/scripts/eos-hook.js\" pre-compact",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$HOME/.claude/scripts/eos-hook.js\" session-end",
+            "timeout": 15
+          }
+        ]
+      }
+    ],
     "PreToolUse": [
       {
         "matcher": "Write|Edit",

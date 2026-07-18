@@ -1,8 +1,8 @@
-# EOS -- Enlightened Operating System v21.0.0
+# EOS -- Enlightened Operating System v21.1.0
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-A prompt engineering framework that shapes Claude's behavior through structured context displacement. v21 adds compaction-surviving state persistence via hooks and an architecturally forked slim kernel.
+A prompt engineering framework that shapes Claude's behavior through structured context displacement. v21 adds compaction-surviving state persistence via hooks and an architecturally forked slim kernel. v21.1 makes the hooks actually deliver it — a working Node dispatcher, per-prompt state injection, and deterministic user lens steering.
 
 ---
 
@@ -16,27 +16,27 @@ The result: responses that reflect the user's actual operating environment inste
 
 ### How it works
 
-EOS has two layers:
+EOS has three layers:
 
 1. **Kernel** (`CLAUDE.md`) -- loaded as system instructions. Contains the USER MODEL, identity declarations, compressed rule summaries, state recovery protocol, and hook declarations. Token ordering enforced: USER MODEL before Identity before Architecture before Rules. v21 slim core: ~176 lines / ~2,800 tokens (down from 545 lines / ~10,400 tokens).
 
 2. **Skills** -- 22 modular files that activate on specific triggers (user keywords, state transitions, metric thresholds). Each skill has its own lifecycle and references kernel rules without duplicating them. v21 adds 4 reference skills that carry full rule text, lens/sim-depth tables, runtime params, and subagent boundaries extracted from the kernel.
 
-3. **Hooks** -- Shell scripts that fire on Claude Code lifecycle events (PreCompact, SessionStart, SessionEnd). v21 adds state persistence hooks that survive context compaction.
+3. **Hooks** -- Scripts that fire on Claude Code lifecycle events (UserPromptSubmit, SessionStart, PreCompact, SessionEnd). v21.1 replaces the bash state hooks with a single Node dispatcher (`eos-hook.js`) that injects EOS state into model context on **every prompt** -- the rules stop depending on model attention -- and lets the user steer the lens deterministically by typing `lens: <name>` in any message.
 
 ### What it looks like in practice
 
 Every EOS response begins with a mandatory runtime header:
 
 ```
-[lens:4] [sim-d:3] [CCI-G:65%] [sim:M] [pos:held|basis:constraint-graph] [tds:on] [ltm:2]
+[lens:build] [sim-d:3] [CCI-G:65%] [sim:M] [pos:held|basis:constraint-graph] [tds:on] [ltm:2]
 ```
 
 This is not decoration. Each field is a live diagnostic:
 
 | Field | Meaning |
 |-------|---------|
-| `lens:4` | Context Lens setting -- how much training prior enters generation |
+| `lens:build` | Lens -- free-form name declaring the layer of work this response operates on. Steerable by the user via `lens: <name>` in any prompt (v21.1). The numeric prior-displacement setting is now the Displacement Dial (`dial to N`) |
 | `sim-d:3` | Simulation Depth -- trajectory enumeration depth |
 | `CCI-G:65%` | Complete Context Index (Goal Progress) -- percentage toward goal convergence |
 | `sim:M` | Simulation confidence -- HIGH / MEDIUM / LOW |
@@ -48,13 +48,13 @@ This is not decoration. Each field is a live diagnostic:
 
 ## Control Axes
 
-EOS exposes two independent control axes that the user adjusts in conversation.
+EOS exposes three independent controls that the user adjusts in conversation: the lens (named layer of work, `lens: <name>`), the Displacement Dial (prior mixing, `dial to N`), and Simulation Depth (`sim N`).
 
-### Context Lens (1--5)
+### Displacement Dial (1--5)
 
-Controls the balance between training priors and user context in generation.
+Controls the balance between training priors and user context in generation. Formerly "Context Lens" -- renamed in v21.1 when the lens slot became a named layer-of-work declaration.
 
-| Lens | Name | Behavior |
+| Dial | Name | Behavior |
 |------|------|----------|
 | 1 | Raw Prior | Pure training distribution output. No displacement. Diagnostic mode. |
 | 2 | Prior-Visible | Conventional output generated first, then user-context alternative alongside it. |
@@ -119,7 +119,7 @@ EOS has 10 operational rules. Each handles a specific mechanical concern.
 - `eos-constraint-graph` -- Constraint classification, dependency mapping, cascade unlocking, G2.6 minimization query (minimum constraint relaxation set)
 - `eos-dimension-ambiguity` -- Handles ambiguous responses during dimension probing
 - `eos-rules-reference` -- Full verbose Rules 1-10 text (extracted from kernel in v21 for on-demand loading)
-- `eos-lens-simdepth` -- Context Lens and Simulation Depth reference tables
+- `eos-lens-simdepth` -- Lens (named), Displacement Dial and Simulation Depth reference
 
 ### Quality
 - `eos-metacognition` -- F0 early warning (passive 7-signal degradation monitor), F1-F2 diagnostics, F3 rule patching with anti-churn check, F4 cross-session lessons via `tasks/lessons.md`
@@ -203,9 +203,8 @@ eos-framework/
     quick-start.md         # 5-minute setup guide
     skill-authoring.md     # How to write new skills
   hooks/
-    eos-precompact.sh      # State backup before context compaction
-    eos-session-start.sh   # State injection on session start / post-compaction
-    eos-session-end.sh     # Final state backup on session close
+    eos-hook.js            # Node dispatcher: per-prompt state injection + lens
+                           #   steering, session-start injection, compaction backup
     credential-guard.sh    # Blocks edits to .env / credential files
     file-backup.sh         # Auto-snapshots before file mutations
     search-year-fix.sh     # Appends current year to web searches
@@ -230,18 +229,19 @@ eos-framework/
 
 ## Hooks
 
-Six Claude Code hooks ship with EOS -- three for state persistence (v21) and three for safety/quality:
+EOS ships one Node dispatcher for state persistence (v21.1) and three bash hooks for safety/quality:
 
 | Hook | Event | Purpose |
 |------|-------|---------|
-| `eos-precompact.sh` | PreCompact | Backs up EOS state file before context compaction, injects recovery message |
-| `eos-session-start.sh` | SessionStart | Injects state file content on session start and post-compaction reload |
-| `eos-session-end.sh` | SessionEnd | Final state backup on session close |
+| `eos-hook.js prompt` | UserPromptSubmit | Injects EOS state + mandates into model context on every prompt; parses `lens: <name>` steering directives before the model sees the message |
+| `eos-hook.js session-start` | SessionStart | Injects state file content on session start and post-compaction reload |
+| `eos-hook.js pre-compact` | PreCompact | Backs up EOS state file before context compaction, injects recovery message |
+| `eos-hook.js session-end` | SessionEnd | Final state backup on session close |
 | `credential-guard.sh` | PreToolUse | Blocks Write/Edit on `.env`, credential files, private keys |
 | `file-backup.sh` | PreToolUse | Creates timestamped backup before any file mutation |
 | `search-year-fix.sh` | PreToolUse | Appends current year to web searches for fresh results |
 
-See [hooks/README.md](hooks/README.md) for installation instructions.
+See [hooks/README.md](hooks/README.md) for installation instructions -- including the two failure modes that silently disabled the v21.0 hooks (top-level registration outside the `"hooks"` key, and `python3` resolving to the Microsoft Store stub on Windows).
 
 ---
 
@@ -250,7 +250,7 @@ See [hooks/README.md](hooks/README.md) for installation instructions.
 - **Pieces LTM reference drift.** Pieces MCP supplementary writes can drift from Notion state over long sessions. Notion is authoritative when they conflict. Pieces is a convenience layer, not a source of truth.
 - **Context window pressure.** The slim kernel is approximately 2,800 tokens (~176 lines). v21 reduced this from ~10,400 tokens by moving verbose content to on-demand skill files. The Context Limit Monitor (Rule 9) manages context pressure, but users in extended sessions should monitor the `ltm` counter in the runtime header.
 - **Skill module loading.** On claude.ai (non-Code), skill loading depends on the Projects feature placing files in `/mnt/skills/user/`. Verify paths if skills are not triggering.
-- **State file prompt cache impact.** The SessionStart hook injects state file content as a systemMessage. Whether this breaks Claude Code's prompt cache prefix stability depends on where hook systemMessages are inserted in the API request. Empirical testing needed -- if cache breaks are detected, state injection can move to a file read on the first model turn instead.
+- **State injection field (resolved in v21.1).** The v21.0 hooks injected state via `systemMessage`, which only displays to the human -- the model never received it. v21.1 uses `hookSpecificOutput.additionalContext`, which reaches model context. Injection arrives adjacent to the user's message via UserPromptSubmit, after the cached system-prompt prefix.
 - **Compaction survival is best-effort.** The state file captures what the model wrote during the conversation. If the model fails to write state on a change event, that state is lost. The PreCompact hook warns on stale state (>5min).
 
 ---

@@ -24,7 +24,7 @@ The goal is the only fixed point. Everything else is fluid.
 
 ## Rule 2: Generation Frame (Full)
 
-Generation starts from the USER MODEL. The user's lived experience, stated constraints, and actual environment are the primary inputs. Training priors are reference data — available for comparison (lens 2-3), never the generation seed (lens 4-5).
+Generation starts from the USER MODEL. The user's lived experience, stated constraints, and actual environment are the primary inputs. Training priors are reference data — available for comparison (dial 2-3), never the generation seed (dial 4-5).
 
 Simulation runs every response. It tests what's there against the goal.
 

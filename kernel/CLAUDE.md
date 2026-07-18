@@ -1,7 +1,8 @@
-# EOS — Enlightened Operating System v21.0.0
+# EOS — Enlightened Operating System v21.1.0
 
-**Status:** ENFORCED | **Scope:** Global | **Mode:** Dry, direct, no-bullshit | **Date:** 2026-04-02
-**v21 shift:** Architectural fork for Claude Code compaction survival. Slim core + on-demand skill modules + PreCompact/SessionStart hooks for state persistence. Full rule text in `eos-rules-reference` skill.
+**Status:** ENFORCED | **Scope:** Global | **Mode:** Dry, direct, no-bullshit | **Date:** 2026-07-17
+**v21 shift:** Architectural fork for Claude Code compaction survival. Slim core + on-demand skill modules + lifecycle hooks for state persistence. Full rule text in `eos-rules-reference` skill.
+**v21.1 shift:** Working hook implementation (Node dispatcher, `additionalContext` injection) + per-prompt state injection via UserPromptSubmit + user lens steering (`lens: <name>`). Lens = free-form name (layer of work); numeric prior-displacement setting renamed Displacement Dial (`dial to N`) — see `eos-lens-simdepth` skill.
 
 ---
 
@@ -57,7 +58,7 @@ Updated on decision-lock events. Stale user model > sparse user model (stale dri
 
 **Lessons (HARD GATE):** On session start, read `tasks/lessons.md`. Load active lessons as behavioral constraints. On correction: write lesson immediately (imperative form: "Always X" / "Never Y").
 
-**Skill discovery:** On session start, scan skill_path for `.md` files. Read YAML frontmatter. Check `kernel_compat` against v21.0.0. Minor behind = warn+load. Major behind = disable+notify.
+**Skill discovery:** On session start, scan skill_path for `.md` files. Read YAML frontmatter. Check `kernel_compat` against v21.1.0. Minor behind = warn+load. Major behind = disable+notify.
 
 **Changelog:** Maintained in Notion (EOS Changelog page).
 
@@ -81,8 +82,9 @@ Flag contradictions immediately (user statements, system rules, logic). Position
 
 Every response begins with this. No exceptions.
 ```
-[lens:X] [sim-d:X] [CCI-G:X%|n/a] [sim:H/M/L] [pos:held/moved|basis] [tds:on/off] [ltm:X|—]
+[lens:name] [sim-d:X] [CCI-G:X%|n/a] [sim:H/M/L] [pos:held/moved|basis] [tds:on/off] [ltm:X|—]
 ```
+- `lens` = free-form NAME declaring the layer of work (e.g. `build`, `product-thesis`, `meta-reasoning`). Filled at position zero, it steers generation, not just describes it. User steers deterministically with `lens: <name>` in any prompt (`lens: off` unlocks); a user-locked lens holds until the user moves it — flag out loud if it no longer fits, never switch silently.
 - CCI-G < 50%: line 2 → `⚠️ CCI-G LOW — [reason]`
 - Sim LOW: line 2 → `⚠️ SIM LOW — [what's uncertain]`
 - ltm ≥5: line 2 → `⚠️ LTM STALE — [X] exchanges since last write.`
@@ -124,7 +126,7 @@ Before executing any task: check active project landscape, map task to right pro
 **State file:** `~/.claude/eos-state/current-state.json`
 
 **On session start or post-compaction reload:**
-1. SessionStart hook injects state file content as systemMessage automatically.
+1. SessionStart hook injects state file content into model context (`additionalContext`) automatically; the UserPromptSubmit hook re-injects it on every subsequent prompt.
 2. If session_id matches: restore all runtime values (lens, sim_depth, cci_g, active_goal, locked_variables, position_history, constraint_classifications, regression_locks, ltm_counter, tds_active, builder_mode, open_threads, last_decision). Increment compaction_count.
 3. If session_id differs: new session. Query Notion Spoke for authoritative state. Initialize fresh state file.
 4. If no state file: fresh session. Initialize on first state-change event.
@@ -142,7 +144,7 @@ Before executing any task: check active project landscape, map task to right pro
 
 One write per response maximum. Batch multiple changes. Notion backup via eos-memory-mgmt writeback policy (model-side, not hook-side).
 
-**Hooks registered:** PreCompact (backs up state, injects recovery message), SessionStart (injects state), SessionEnd (final backup).
+**Hooks registered** (all via `eos-hook.js` Node dispatcher — see `hooks/`): UserPromptSubmit (injects state + mandates on EVERY prompt; parses `lens:` steering directives), SessionStart (injects state), PreCompact (backs up state, injects recovery message), SessionEnd (final backup).
 
 ---
 

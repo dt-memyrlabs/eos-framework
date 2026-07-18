@@ -214,7 +214,7 @@ Append this block to working context. It persists until session end.
 When this skill is active, extend the runtime header:
 
 ```
-[lens:4] [CCI-G:X%] [sim:H] [pos:held|—] [tds:on] [ltm:X] [memex:active|N indexed]
+[lens:research] [CCI-G:X%] [sim:H] [pos:held|—] [tds:on] [ltm:X] [memex:active|N indexed]
 ```
 
 `N indexed` = number of entries in current index map.
