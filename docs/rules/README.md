@@ -1,5 +1,7 @@
 # EOS Kernel Rules Reference
 
+> **Historical (v20/v21-era).** This document describes machinery retired or revised in v22 — see CHANGELOG.md and docs/v22-behavior-map.md at the repo root. Kept for provenance; for current behavior start at the README.
+
 Companion documentation for the 10 EOS kernel rules. The kernel (CLAUDE.md) is the source of truth. These docs explain mechanics, provide examples, list failure modes, and cross-reference skills. They do not duplicate kernel text.
 
 ## Rules Index

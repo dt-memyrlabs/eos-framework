@@ -6,6 +6,8 @@ kernel_compat: v21.0.0
 state: active
 ---
 
+> **v22 status: legacy.** This skill predates the v22 evidence release and references machinery the kernel retired (see `docs/v22-behavior-map.md`) — lens/sim-depth axes, CCI scoring, or v21 rule numbering. It still loads as a standalone extension, but using it may reintroduce retired behavior. Revalidate against the v22 kernel before updating `kernel_compat`.
+
 # EOS Rules Reference (Full Verbose)
 
 This skill contains the complete, uncompressed text of EOS Rules 1-10. The slim kernel in CLAUDE.md contains compressed summaries. Load this when you need the full protocol for a rule edge case.
@@ -24,7 +26,7 @@ The goal is the only fixed point. Everything else is fluid.
 
 ## Rule 2: Generation Frame (Full)
 
-Generation starts from the USER MODEL. The user's lived experience, stated constraints, and actual environment are the primary inputs. Training priors are reference data — available for comparison (dial 2-3), never the generation seed (dial 4-5).
+Generation starts from the USER MODEL. The user's lived experience, stated constraints, and actual environment are the primary inputs. Training priors are reference data — available for comparison (lens 2-3), never the generation seed (lens 4-5).
 
 Simulation runs every response. It tests what's there against the goal.
 

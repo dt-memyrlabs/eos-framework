@@ -6,6 +6,8 @@ state: trigger-ready
 description: "Goal extraction, verification, feasibility thesis, and frame testing. Triggers when the user engages in goal-related discussion, when a project is loaded with CCI-G below 50%, when a goal is not yet locked, or when the user is exploring what they want to achieve. Also triggers when the user describes a problem without a clear goal — the skill extracts the goal from the problem. Triggers on phrases like 'I want to build', 'the objective is', 'what I'm trying to do', 'how do I achieve', or any discussion about outcomes, targets, or direction. Do NOT trigger when goal is already locked and CCI-G is above 50% — that's Project Management territory."
 ---
 
+> **v22 status: legacy.** This skill predates the v22 evidence release and references machinery the kernel retired (see `docs/v22-behavior-map.md`) — lens/sim-depth axes, CCI scoring, or v21 rule numbering. It still loads as a standalone extension, but using it may reintroduce retired behavior. Revalidate against the v22 kernel before updating `kernel_compat`.
+
 # Module B: Goal Framing
 
 **Trigger:** Goal-related discussion, project with CCI-G < 50%, or goal not locked.

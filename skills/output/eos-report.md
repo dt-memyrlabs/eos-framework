@@ -6,6 +6,8 @@ state: trigger-ready
 description: "Structured report synthesis using ReACT (Reasoning + Acting) pattern. Compiles project state into a deliverable report by pulling from Notion Spoke, Memex archive, constraint graph, and conversation history. Triggers on 'generate report', convergence declaration, or explicit request. Produces markdown report with mandatory multi-source cross-referencing. Do NOT trigger during active goal framing or mid-simulation — reports synthesize completed or near-completed work, not in-progress reasoning."
 ---
 
+> **v22 status: legacy.** This skill predates the v22 evidence release and references machinery the kernel retired (see `docs/v22-behavior-map.md`) — lens/sim-depth axes, CCI scoring, or v21 rule numbering. It still loads as a standalone extension, but using it may reintroduce retired behavior. Revalidate against the v22 kernel before updating `kernel_compat`.
+
 # EOS Report Skill — Structured Synthesis
 
 **Trigger:** "Generate report" / "project report" / convergence declared (C8) / explicit request.

@@ -6,6 +6,8 @@ state: trigger-ready
 description: "Full project management: assumption tracking, decision logging, blocker management, limiter analysis, convergence. Triggers when a project has a locked goal AND CCI-G is at or above 50%. Stays active while the project is being discussed. Also triggers when the user references an active project by name, asks about project status, discusses blockers, makes decisions that need tracking, or works toward convergence. Handles cross-project priority conflicts when multiple projects are active. Do NOT trigger during initial goal framing (that's eos-goal-framing) or pure build execution (that's eos-builder)."
 ---
 
+> **v22 status: legacy.** This skill predates the v22 evidence release and references machinery the kernel retired (see `docs/v22-behavior-map.md`) — lens/sim-depth axes, CCI scoring, or v21 rule numbering. It still loads as a standalone extension, but using it may reintroduce retired behavior. Revalidate against the v22 kernel before updating `kernel_compat`.
+
 # Module C: Project Management
 
 **Trigger:** Goal locked AND CCI-G ≥ 50%.

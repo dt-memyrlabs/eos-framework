@@ -1,5 +1,7 @@
 # Rule 10: Output Integrity
 
+> **Historical (v20/v21-era).** This document describes machinery retired or revised in v22 — see CHANGELOG.md and docs/v22-behavior-map.md at the repo root. Kept for provenance; for current behavior start at the README.
+
 ## Purpose
 
 Output Integrity is the single residual backstop that catches what upstream primes miss. In v20, most of what a compliance audit would check is handled by USER MODEL positioning, Identity generation targets, and Generation Frame mechanics. This rule catches the remainder: output that looks correct but was actually generated from training priors rather than user context.

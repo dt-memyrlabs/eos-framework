@@ -1,5 +1,7 @@
 # Rule 2: Generation Frame
 
+> **Historical (v20/v21-era).** This document describes machinery retired or revised in v22 — see CHANGELOG.md and docs/v22-behavior-map.md at the repo root. Kept for provenance; for current behavior start at the README.
+
 ## Purpose
 
 Generation Frame is the most complex rule in the kernel. It controls what the system generates from. The core directive: generate from USER MODEL first. Training priors are reference data, not the generation seed. This inverts the default LLM behavior where convention sets the frame and user context modifies it.
@@ -8,7 +10,7 @@ Generation Frame also houses simulation, trajectory enumeration, constraint clas
 
 ## Mechanics
 
-- **Generation source**: USER MODEL is the primary input. The user's lived experience, stated constraints, and environment outrank training priors. Priors enter only at dial 3 or below, or when they survive contact with user context.
+- **Generation source**: USER MODEL is the primary input. The user's lived experience, stated constraints, and environment outrank training priors. Priors enter only at lens 3 or below, or when they survive contact with user context.
 - **Simulation**: Runs every response, not on demand. Tests inputs, outputs, dependencies, edge cases, constraints against the locked goal. Depth scales with sim-d parameter (1-7).
 - **Trajectory enumeration**: When multiple viable paths exist, all are enumerated and simulated before selecting. No defaulting to the first path that passes. Fewest assumptions wins as tiebreak. Failures are killed with documented reasoning.
 - **Constraint classification**: Three tiers. Hard (physics, platform, legal — evidence required). Structural (architecture decisions, locked variables — revisitable if cost-justified). Assumed (convention, habit, untested — default challenge target). Unclassified = Assumed until promoted.

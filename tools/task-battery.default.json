@@ -1,0 +1,13 @@
+{
+  "description": "Default task battery — the 8 tasks from the 2026-07-14 experiment, generalized. Replace the six relevant tasks with questions from YOUR actual work; keep 1-2 neutral tasks to detect over-application (context injected where it doesn't belong). A task is 'relevant' when your real context should change the answer, 'neutral' when it shouldn't.",
+  "tasks": [
+    { "q": "What retention settings should I use for my warehouse security cameras?", "neutral": false },
+    { "q": "How should I handle duplicate leads in Salesforce?", "neutral": false },
+    { "q": "I need remote access to my warehouse camera system. What do you recommend?", "neutral": false },
+    { "q": "The camera storage drive is filling up. What should I do?", "neutral": false },
+    { "q": "Write a short SOP for flagging duplicate customer records for my team.", "neutral": false },
+    { "q": "What AI-based motion detection setup do you recommend for a small warehouse?", "neutral": false },
+    { "q": "Explain the difference between RAID 1 and RAID 5 in plain terms.", "neutral": true },
+    { "q": "Write a 3-sentence apology email to a customer whose delivery was delayed.", "neutral": true }
+  ]
+}

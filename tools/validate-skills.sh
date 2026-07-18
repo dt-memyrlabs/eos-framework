@@ -1,84 +1,58 @@
 #!/bin/bash
-# EOS Skill Validator
-# Compares skill_versions in kernel against YAML frontmatter in skill files.
+# EOS Skill Validator (v22-aware)
+# Checks each skill's YAML frontmatter, compares kernel_compat against the
+# kernel's major version, and flags references to machinery retired in v22.
+# Exits 0 with a summary (warnings are informational — skills are optional
+# extensions since v22); exits 1 only on structural problems (missing
+# frontmatter fields or unreadable kernel).
 # Usage: ./tools/validate-skills.sh [kernel_path] [skills_dir]
 
-set -euo pipefail
+set -u
 
 KERNEL="${1:-kernel/CLAUDE.md}"
 SKILLS_DIR="${2:-skills}"
 
 if [[ ! -f "$KERNEL" ]]; then
-    echo "ERROR: Kernel not found at $KERNEL"
+    echo "ERROR: kernel not found at $KERNEL"
     exit 1
 fi
 
-# Extract skill_versions line from kernel
-VERSIONS_LINE=$(grep '^skill_versions:' "$KERNEL" | head -1)
-
-if [[ -z "$VERSIONS_LINE" ]]; then
-    echo "ERROR: No skill_versions line found in $KERNEL"
-    exit 1
-fi
-
-# Parse kernel version
-KERNEL_VERSION=$(head -1 "$KERNEL" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' || echo "unknown")
-echo "Kernel version: $KERNEL_VERSION"
+KERNEL_VERSION=$(head -1 "$KERNEL" | grep -oE 'v[0-9]+(\.[0-9]+)*' | head -1)
+KERNEL_MAJOR=$(echo "${KERNEL_VERSION:-v0}" | grep -oE '[0-9]+' | head -1)
+echo "Kernel: ${KERNEL_VERSION:-unknown} (major ${KERNEL_MAJOR:-?})"
 echo "---"
 
-PASS=0
-FAIL=0
-MISSING=0
+RETIRED_PATTERN='CCI-G|Context Lens|sim-depth|sim-d:|\[tds|\[ltm|Rule 8|Rule 9|Rule 10'
+OK=0; LEGACY=0; STRUCTURAL=0
 
-# Parse each skill:version pair from the kernel line
-echo "$VERSIONS_LINE" | sed 's/skill_versions:\s*//' | tr '|' '\n' | while read -r pair; do
-    pair=$(echo "$pair" | xargs)  # trim whitespace
-    [[ -z "$pair" ]] && continue
-
-    SKILL_NAME=$(echo "$pair" | cut -d: -f1 | xargs)
-    EXPECTED_VERSION=$(echo "$pair" | cut -d: -f2 | xargs)
-
-    # Find the skill file (search recursively in skills dir)
-    SKILL_FILE=$(find "$SKILLS_DIR" -name "${SKILL_NAME}.md" -type f 2>/dev/null | head -1)
-
-    if [[ -z "$SKILL_FILE" ]]; then
-        echo "MISSING  $SKILL_NAME — expected $EXPECTED_VERSION, file not found"
-        echo "MISSING" >> /tmp/eos_validate_counts
+for f in "$SKILLS_DIR"/*/*.md; do
+    name=$(grep -m1 '^name:' "$f" | sed 's/^name:[[:space:]]*//')
+    compat=$(grep -m1 '^kernel_compat:' "$f" | sed 's/^kernel_compat:[[:space:]]*//; s/"//g')
+    if [[ -z "$name" || -z "$compat" ]]; then
+        echo "STRUCTURAL  $f — missing name or kernel_compat in frontmatter"
+        STRUCTURAL=$((STRUCTURAL + 1))
         continue
     fi
-
-    # Extract version from YAML frontmatter
-    ACTUAL_VERSION=$(grep -m1 '^version:' "$SKILL_FILE" | sed 's/version:\s*//' | tr -d '"' | xargs)
-
-    if [[ "$ACTUAL_VERSION" == "$EXPECTED_VERSION" ]]; then
-        echo "PASS     $SKILL_NAME — $ACTUAL_VERSION"
-        echo "PASS" >> /tmp/eos_validate_counts
-    else
-        echo "MISMATCH $SKILL_NAME — kernel expects $EXPECTED_VERSION, file has $ACTUAL_VERSION"
-        echo "FAIL" >> /tmp/eos_validate_counts
+    compat_major=$(echo "$compat" | grep -oE '[0-9]+' | head -1)
+    issues=""
+    [[ "$compat_major" != "$KERNEL_MAJOR" ]] && issues="kernel_compat $compat != kernel $KERNEL_VERSION"
+    if grep -qE "$RETIRED_PATTERN" "$f"; then
+        [[ -n "$issues" ]] && issues="$issues; "
+        issues="${issues}references v21-retired machinery"
     fi
-
-    # Check kernel_compat
-    COMPAT=$(grep -m1 '^kernel_compat:' "$SKILL_FILE" | sed 's/kernel_compat:\s*//' | tr -d '"' | xargs)
-    if [[ -n "$COMPAT" && "$COMPAT" != "$KERNEL_VERSION" ]]; then
-        echo "  WARN   kernel_compat is $COMPAT (kernel is $KERNEL_VERSION)"
+    if [[ -n "$issues" ]]; then
+        marked=""
+        grep -q 'v22 status: legacy' "$f" && marked=" [marked legacy]"
+        echo "LEGACY      $name — $issues$marked"
+        LEGACY=$((LEGACY + 1))
+    else
+        echo "OK          $name ($compat)"
+        OK=$((OK + 1))
     fi
 done
 
-echo ""
 echo "---"
-
-# Count results
-if [[ -f /tmp/eos_validate_counts ]]; then
-    PASS_COUNT=$(grep -c "PASS" /tmp/eos_validate_counts 2>/dev/null | tr -d '[:space:]' || echo "0")
-    FAIL_COUNT=$(grep -c "FAIL" /tmp/eos_validate_counts 2>/dev/null | tr -d '[:space:]' || echo "0")
-    MISSING_COUNT=$(grep -c "MISSING" /tmp/eos_validate_counts 2>/dev/null | tr -d '[:space:]' || echo "0")
-    rm -f /tmp/eos_validate_counts
-    echo "Results: ${PASS_COUNT} passed, ${FAIL_COUNT} mismatched, ${MISSING_COUNT} missing"
-
-    if [[ "${FAIL_COUNT}" -gt 0 || "${MISSING_COUNT}" -gt 0 ]]; then
-        exit 1
-    fi
-else
-    echo "No skills checked."
-fi
+echo "Summary: $OK ok, $LEGACY legacy, $STRUCTURAL structural problems"
+echo "Legacy skills still load as optional extensions; see docs/v22-behavior-map.md before relying on one."
+[[ $STRUCTURAL -gt 0 ]] && exit 1
+exit 0

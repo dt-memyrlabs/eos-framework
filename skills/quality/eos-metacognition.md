@@ -6,6 +6,8 @@ state: auto-monitor
 description: "Self-correction system — early warning detection, prediction calibration, rule friction auditing, autonomous rule patching, cross-session lessons. F0 (early warning) runs passively every response when goal is locked, detecting degradation patterns before they hit diagnostic thresholds. Auto-escalates to F1 when 2+ signals detected. F1-F2 (diagnostic) AUTO-TRIGGER on threshold breach: 3 consecutive LOW confidence or limiter rejection rate > 50%. F3 (patching) requires user confirmation at Tier 3 — includes anti-churn check against patch history. F4 (cross-session lessons) reads tasks/lessons.md at session start, writes corrections immediately on occurrence, escalates at 3+ cross-session occurrences. File-based — no external dependency. Also triggers on explicit request ('run meta-cognition', 'self-check', 'audit the rules')."
 ---
 
+> **v22 status: legacy.** This skill predates the v22 evidence release and references machinery the kernel retired (see `docs/v22-behavior-map.md`) — lens/sim-depth axes, CCI scoring, or v21 rule numbering. It still loads as a standalone extension, but using it may reintroduce retired behavior. Revalidate against the v22 kernel before updating `kernel_compat`.
+
 # Module F: Meta-Cognition (Self-Correction)
 
 **Trigger conditions (auto-fire, no permission needed for F0-F2):**

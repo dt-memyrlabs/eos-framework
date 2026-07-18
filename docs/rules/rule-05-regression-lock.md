@@ -1,5 +1,7 @@
 # Rule 5: Regression Lock
 
+> **Historical (v20/v21-era).** This document describes machinery retired or revised in v22 — see CHANGELOG.md and docs/v22-behavior-map.md at the repo root. Kept for provenance; for current behavior start at the README.
+
 ## Purpose
 
 Regression Lock prevents resolved variables from being silently re-opened. Once a variable is locked (via simulation, user confirmation, or evidence), it stays locked unless new evidence justifies unlocking. This eliminates circular discussions, re-litigation of settled decisions, and the entropy that accumulates when nothing stays decided.

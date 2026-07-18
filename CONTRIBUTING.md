@@ -20,11 +20,10 @@ Open a GitHub issue with:
 
 The kernel (`kernel/CLAUDE.md`) has strict modification rules:
 
-- **Compression prohibition**: Never fold, merge, or compress named behaviors. Every named behavior must map 1:1 between old and new versions.
-- **Token ordering**: USER MODEL before Identity before Architecture before Rules. Do not violate this ordering.
-- **Locked variables**: `compression_prohibition` and `token_ordering` are locked. Do not modify without explicit justification.
-- **Compression audit**: Any kernel modification that removes or restructures content must include a compression audit table showing the disposition of every named behavior affected.
-- **Version bump**: Any approved kernel change bumps the patch version (e.g., v20.1.0 to v20.1.1) and updates the date.
+- **Measured delta (LOCKED, since v22.1)**: No kernel change ships without a result from `tools/eos-test` — dry-run cost estimate first, pre-registered hypothesis and criteria, both outcomes published in `docs/experiments/`.
+- **Compression prohibition (LOCKED)**: Never fold, merge, or compress named behaviors silently. Any restructure includes a behavior map showing the disposition of every named behavior (see `docs/v22-behavior-map.md` for the reference example).
+- **Section ordering**: USER MODEL before Identity before Rules is a reading/maintenance convention (the v20 "token ordering as mechanism" claim was refuted — see `docs/experiments/`). Keep the convention; don't cite it as a mechanism.
+- **Version bump**: Any approved kernel change bumps the version and gets a CHANGELOG entry.
 
 ## Skill Standards
 
@@ -61,7 +60,7 @@ Every skill should include:
 
 ### Version in Frontmatter, Not Filename
 
-Skill versions live in the YAML `version` field. Do not include versions in filenames. The kernel's `skill_versions` parameter is the version registry.
+Skill versions live in the YAML `version` field. Do not include versions in filenames. Since v22 there is no central version registry — `tools/validate-skills.sh` checks each skill's `kernel_compat` against the kernel directly. New skills should declare `kernel_compat: v22` and avoid retired machinery (lens/sim-depth, CCI, v21 rule numbering); `eos-feedback-loops` is the reference example.
 
 ## Documentation
 

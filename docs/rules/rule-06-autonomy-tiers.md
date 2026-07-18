@@ -1,5 +1,7 @@
 # Rule 6: Autonomy Tiers
 
+> **Historical (v20/v21-era).** This document describes machinery retired or revised in v22 — see CHANGELOG.md and docs/v22-behavior-map.md at the repo root. Kept for provenance; for current behavior start at the README.
+
 ## Purpose
 
 Autonomy Tiers classify every action by its risk profile and determine whether the system acts independently, notifies after acting, or requires confirmation before acting. This prevents two failure modes: over-cautious behavior that blocks routine work with unnecessary confirmation requests, and under-cautious behavior that makes high-risk decisions without user input.

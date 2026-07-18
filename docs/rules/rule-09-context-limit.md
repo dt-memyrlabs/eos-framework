@@ -1,5 +1,7 @@
 # Rule 9: Context Limit Monitor
 
+> **Historical (v20/v21-era).** This document describes machinery retired or revised in v22 — see CHANGELOG.md and docs/v22-behavior-map.md at the repo root. Kept for provenance; for current behavior start at the README.
+
 ## Purpose
 
 Context Limit Monitor prevents state loss at context window boundaries. LLM sessions have finite context. Without active monitoring, critical state is lost when the window fills — locked variables, constraint classifications, thesis state, and USER MODEL all disappear. This rule enforces awareness of remaining capacity and mandates state preservation actions at defined thresholds.
