@@ -1,0 +1,49 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "EOS_STATE_DIR=\"$CLAUDE_PROJECT_DIR/.claude/eos-state\" node \"$HOME/.claude/scripts/eos-hook.js\" prompt",
+            "timeout": 10,
+            "statusMessage": "EOS state injection (project)"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "EOS_STATE_DIR=\"$CLAUDE_PROJECT_DIR/.claude/eos-state\" node \"$HOME/.claude/scripts/eos-hook.js\" session-start",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "EOS_STATE_DIR=\"$CLAUDE_PROJECT_DIR/.claude/eos-state\" node \"$HOME/.claude/scripts/eos-hook.js\" pre-compact",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "EOS_STATE_DIR=\"$CLAUDE_PROJECT_DIR/.claude/eos-state\" node \"$HOME/.claude/scripts/eos-hook.js\" session-end",
+            "timeout": 15
+          }
+        ]
+      }
+    ]
+  }
+}

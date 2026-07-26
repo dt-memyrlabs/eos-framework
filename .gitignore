@@ -11,7 +11,8 @@ desktop.ini
 .idea/
 
 # Local session data
-.claude/
+.claude/*
+!.claude/settings.json
 *.jsonl
 
 # Local memory (user-specific, not part of framework)
@@ -26,3 +27,4 @@ desktop.ini
 # Temp files
 /tmp/
 *.tmp
+.claude/eos-state/
