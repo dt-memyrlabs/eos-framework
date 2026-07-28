@@ -1,7 +1,6 @@
 # EOS -- Enlightened Operating System v22.0.0
 
-[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 A small, evidence-tested prompt framework for Claude. One kernel file, five rules, a prose user model, and a published falsification test that cut the framework down to what it could prove -- including the parts the test killed.
 
 ---
@@ -109,4 +108,4 @@ eos-framework/
 
 ## License
 
-Apache License 2.0. See [LICENSE](LICENSE).
+MIT License.See [LICENSE](LICENSE).
