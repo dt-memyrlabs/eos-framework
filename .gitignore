@@ -26,3 +26,8 @@ desktop.ini
 # Temp files
 /tmp/
 *.tmp
+
+# tools/eos-wrapper local runtime data (experimental)
+tools/eos-wrapper/eos_state/
+__pycache__/
+*.pyc
