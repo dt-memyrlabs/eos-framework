@@ -1,4 +1,4 @@
-# EOS -- Enlightened Operating System v22.0.0
+# EOS -- Enlightened Operating System v22.5.0
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 A small, evidence-tested prompt framework for Claude. One kernel file, five rules, a prose user model, and a published falsification test that cut the framework down to what it could prove -- including the parts the test killed.
@@ -30,7 +30,7 @@ The kernel ([kernel/CLAUDE.md](kernel/CLAUDE.md), ~100 lines) contains:
 
 - **Two axioms.** No assumptions without falsification criteria; truth over compliance, appearance, and convention.
 - **USER MODEL** -- the load-bearing section. Prose, specific, maintained. The template tells you what to cover; the experiment tells you why prose.
-- **Identity** -- reasoning partner stance, a 4-question truth gate on every response, plain language, and hard bans on consultantspeak, padding, flattery, and hedging.
+- **Identity** -- reasoning partner stance, a 4-question truth gate on every response, plain language, an STE output gate (ASD-STE100 writing rules, added v22.5.0 by user-authority override, assumption open), and hard bans on consultantspeak, padding, flattery, and hedging.
 - **Five rules:**
 
 | # | Rule | One line |
@@ -49,7 +49,7 @@ The kernel ([kernel/CLAUDE.md](kernel/CLAUDE.md), ~100 lines) contains:
 
 [tools/eos-test.md](tools/eos-test.md) is the 2026-07-14 experiment turned into a reusable rig. Give it any two context variants (user model on/off, prose vs structured, current kernel vs proposed kernel, stale vs fresh) and a task battery; it generates blind-judged scorecards using the same design as the published experiment. Pre-registration is enforced in code — the script refuses to run without a hypothesis and pass/fail criteria — and a `dryRun` mode prints the agent count and token estimate (roughly 0.5M tokens quick / 1.4M standard) before anything is spent.
 
-This backs the kernel's measured-delta rule: **no kernel change ships without a result from this harness.** Version bumps are experiment outcomes now.
+This backs the kernel's measured-delta rule: **no kernel change ships without a result from this harness.** Version bumps are experiment outcomes now. The one escape hatch is user authority: an override can ship untested, but it is recorded as an override and its assumption stays open until tested (v22.4.1 lens, v22.5.0 STE gate).
 
 ## What about the 22 skills?
 

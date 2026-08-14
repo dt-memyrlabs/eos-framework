@@ -2,6 +2,16 @@
 
 All notable changes to EOS are documented here.
 
+## v22.5.0 — 2026-08-09
+
+### Added
+
+- **STE output gate (HARD GATE)**: all responses follow the ASD-STE100 writing rules — active voice, sentence length caps (20 words per instruction, 25 per description), one instruction per sentence, one topic per paragraph, simple verb forms, no idiom/slang/noun clusters over 3 nouns, warnings before the instructions they apply to. The approved-word dictionary is not shipped; only the writing rules apply. Shipped by user-authority override with no eos-test run, and recorded as such per the Measured delta rule. Open assumption: STE rules improve output clarity for the user. Falsification: the user reports lower clarity or asks for removal.
+
+### Changed
+
+- **Measured delta rule** now states explicitly that user-authority overrides are recorded as overrides with their assumption left open, rather than passing as tested changes.
+
 ## v22.4.1 — 2026-07-17
 
 ### Changed
