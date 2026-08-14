@@ -67,6 +67,14 @@ cp kernel/CLAUDE.md ~/.claude/CLAUDE.md
 
 Then edit the USER MODEL section: replace the template block with 5-12 prose sentences about yourself, your methods, your environment, and your active projects. That edit is most of the value of this framework -- the experiment says so. Skills and hooks are optional; see below.
 
+Alternative: install EOS as an on-demand Claude Code skill instead of always-on system context. [skills/eos/SKILL.md](skills/eos/SKILL.md) is the kernel in skill form -- it activates when you say "EOS" and stays out of the way otherwise:
+
+```bash
+cp -r skills/eos ~/.claude/skills/eos
+```
+
+It is the only entry under skills/ in Claude Code's installable `SKILL.md` format; the legacy category folders are plain reference documents, not installable skills.
+
 ## Hooks (optional, independently useful)
 
 EOS ships one Node dispatcher for state persistence (four lifecycle events) and three bash safety/quality hooks. They work with or without the kernel:
