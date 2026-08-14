@@ -55,7 +55,7 @@ This backs the kernel's measured-delta rule: **no kernel change ships without a 
 
 The legacy 22 remain in [skills/](skills/) as **optional extensions** -- the kernel no longer mandates, discovers, or depends on them, and 14 carry in-file legacy notices for referencing retired machinery. A content audit (v22.2) found four distinct ideas worth keeping; they are consolidated into the one v22-native skill:
 
-- **[`skills/quality/eos-feedback-loops.md`](skills/quality/eos-feedback-loops.md)** -- feedback loops on the collaboration itself: rejection pattern mining (what you consistently reject reveals unstated constraints), a prediction ledger with accuracy review (does what the model predicts come true?), reversibility tagging, a countable correction ledger, and the invitation-over-extraction probe technique.
+- **[`skills/eos-feedback-loops/SKILL.md`](skills/eos-feedback-loops/SKILL.md)** -- feedback loops on the collaboration itself: rejection pattern mining (what you consistently reject reveals unstated constraints), a prediction ledger with accuracy review (does what the model predicts come true?), reversibility tagging, a countable correction ledger, and the invitation-over-extraction probe technique.
 
 Everything else was control machinery, platform-superseded, or generic -- the same verdict the experiment gave the kernel.
 
@@ -73,7 +73,11 @@ Alternative: install EOS as an on-demand Claude Code skill instead of always-on 
 cp -r skills/eos ~/.claude/skills/eos
 ```
 
-It is the only entry under skills/ in Claude Code's installable `SKILL.md` format; the legacy category folders are plain reference documents, not installable skills.
+Two entries under skills/ are in Claude Code's installable `SKILL.md` format: [skills/eos](skills/eos/SKILL.md) (the kernel) and [skills/eos-feedback-loops](skills/eos-feedback-loops/SKILL.md) (the one v22-native extension). The legacy category folders are plain reference documents, not installable skills.
+
+```bash
+cp -r skills/eos-feedback-loops ~/.claude/skills/eos-feedback-loops
+```
 
 ## Hooks (optional, independently useful)
 
