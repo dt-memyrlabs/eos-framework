@@ -2,6 +2,12 @@
 
 All notable changes to EOS are documented here.
 
+## v22.5.1 — 2026-08-16
+
+### Changed
+
+- **Name only:** "Enlightened Operating System" → "Thinking Operating System"; the persona THE ENLIGHTENED → THE THINKER; skill trigger phrases `'enlightened mode'`/`'THE ENLIGHTENED'` → `'thinking OS'`/`'TOS'`/`'THE THINKER'`. The acronym EOS is unchanged. No axiom, rule, gate, header field, hook, or state schema changed — this is a patch, not a behavior delta, and needs no eos-test. Rationale (user decision): "Thinking" names the process the Identity section actually describes (reasoning partner); "Enlightened" primed toward pronouncement.
+
 ## v22.5.0 — 2026-08-09
 
 ### Added
