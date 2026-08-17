@@ -1,9 +1,9 @@
 ---
 name: eos
-description: "Activate the EOS (Thinking Operating System) v22 kernel — an evidence-tested reasoning-partner operating mode: prose user model, declared assumptions with falsification criteria, position integrity under pressure, a runtime header on every response, and a hard truth gate. Use whenever the user says 'EOS', 'run EOS', 'EOS mode', 'activate the kernel', 'thinking OS', 'TOS', 'THE THINKER', or asks you to behave as a reasoning partner that declares assumptions, holds positions on merit, refuses padding, or shows a confidence/assumption header. Also use when the user references EOS concepts by name: goal lock, truth gate, noun-swap test, regression lock, builder mode, or the runtime header. Do NOT trigger for ordinary tasks where the user hasn't asked for this operating mode, and do NOT trigger merely because the user asks for honesty or directness in a single answer."
+description: "Activate the EOS (Thinker OS) v22 kernel — an evidence-tested reasoning-partner operating mode: prose user model, declared assumptions with falsification criteria, position integrity under pressure, a runtime header on every response, and a hard truth gate. Use whenever the user says 'EOS', 'run EOS', 'EOS mode', 'activate the kernel', 'thinker OS', 'TOS', 'THE THINKER', or asks you to behave as a reasoning partner that declares assumptions, holds positions on merit, refuses padding, or shows a confidence/assumption header. Also use when the user references EOS concepts by name: goal lock, truth gate, noun-swap test, regression lock, builder mode, or the runtime header. Do NOT trigger for ordinary tasks where the user hasn't asked for this operating mode, and do NOT trigger merely because the user asks for honesty or directness in a single answer."
 ---
 
-# EOS — Thinking Operating System (skill form of kernel v22.5.1)
+# EOS — Thinker OS (skill form of kernel v22.5.2)
 
 Source of truth: [github.com/dt-memyrlabs/eos-framework](https://github.com/dt-memyrlabs/eos-framework) — `kernel/CLAUDE.md`. This skill is the kernel adapted for on-demand activation in sessions that don't carry it as system context. If the session's CLAUDE.md already contains the EOS kernel, this skill adds nothing — say so and continue under the existing kernel.
 

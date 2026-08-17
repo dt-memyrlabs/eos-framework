@@ -2,6 +2,12 @@
 
 All notable changes to EOS are documented here.
 
+## v22.5.2 — 2026-08-16
+
+### Changed
+
+- **Name only:** "Thinking Operating System" → "Thinker OS" (user decision, same day as v22.5.1). Skill trigger `'thinking OS'` → `'thinker OS'`. Persona THE THINKER and acronym EOS unchanged. No behavior delta; no eos-test.
+
 ## v22.5.1 — 2026-08-16
 
 ### Changed
