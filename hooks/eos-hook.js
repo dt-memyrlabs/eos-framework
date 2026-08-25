@@ -18,7 +18,9 @@
 const fs = require('fs'), os = require('os'), path = require('path');
 
 const EVENT = process.argv[2] || 'prompt';
-const DIR = path.join(os.homedir(), '.claude', 'eos-state');
+// EOS_STATE_DIR overrides the global state location — set it in a project's
+// .claude/settings.json hook commands for per-project state isolation.
+const DIR = process.env.EOS_STATE_DIR || path.join(os.homedir(), '.claude', 'eos-state');
 const STATE = path.join(DIR, 'current-state.json');
 const BACKUPS = path.join(DIR, 'backups');
 
@@ -90,9 +92,17 @@ process.stdin.on('end', () => {
     lines.push(`state: ${JSON.stringify(state)}`);
     if (state.lens) lines.push(`lens: ${state.lens}${state.lens_locked_by_user ? ' [USER-LOCKED — hold until the user sends "lens: off" or steers a new value]' : ' [free choice]'}`);
   } else {
-    lines.push('state: none — fresh session. Initialize ~/.claude/eos-state/current-state.json on first state-change event.');
+    lines.push(`state: none — fresh session. Initialize ${STATE} on first state-change event.`);
   }
   if (steer) lines.push(steer);
+  // Distilled lessons: injected every prompt in every project. Fix for the
+  // 2026-08-24 recurrence measurement — per-repo tasks/lessons.md silos meant
+  // project sessions never saw the global lessons (6/8 mature lessons recurred).
+  try {
+    const lessons = fs.readFileSync(path.join(DIR, 'lessons-distilled.md'), 'utf8')
+      .split(/\r?\n/).filter(l => l.startsWith('- ')).join('\n');
+    if (lessons) lines.push('LESSONS (standing, apply to every response):\n' + lessons);
+  } catch {}
   lines.push('MANDATES: begin the response with the v22 runtime header — [lens:name] [goal:locked|open] [assump:N] [conf:H/M/L] [pos:held/moved|basis] — facts only, per Rule 2. Default to brief — expand only when asked. On any state-change trigger (goal, variable lock, assumption open/close, position, threads, decision) write decision-locks to Notion when available and update the state file via the Write tool — max one write per response. Lens steering: "lens: <name>" anywhere in a prompt; "lens: off" to unlock.');
 
   out({

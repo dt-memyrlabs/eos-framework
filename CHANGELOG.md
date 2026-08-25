@@ -2,6 +2,17 @@
 
 All notable changes to EOS are documented here.
 
+## v22.6.0 — 2026-08-24
+
+### Changed
+
+- **STE gate scoped to technical/instructional output only** (user decision closing the 2026-08-24 measurement's open question). The gate held at the pre-registered boundary on technical/instructional tasks (8/12 wins, quality −0.5) and was harmful on relational/explanatory tasks (1/4, quality −1.7, 75% rule-artifact pollution). Relational, explanatory, and evaluative responses are now exempt and follow the plain-language gate only. Evidence: `docs/experiments/2026-08-24-ste-and-lens-overrides.md`. No new eos-test — this change implements that published result.
+- **`hooks/eos-hook.js`: per-prompt distilled-lessons injection.** The hook now reads `<state-dir>/lessons-distilled.md` (one-line imperatives) and injects it on every UserPromptSubmit and SessionStart, in every project. Motivation: a 2026-08-24 measurement over 302 sessions found 6 of 8 mature lessons recurred after being written, largely because per-repo `tasks/lessons.md` files are silos — project sessions never loaded the global lessons. Re-measure ~2026-09-21; pre-registered criterion: top-3 recurring classes drop by half. Also synced from the live dispatcher: `EOS_STATE_DIR` env override for per-project state isolation.
+
+### Unchanged
+
+- Named lens stays in the header (standing user decision, reaffirmed 2026-08-24). The in-vivo steering tally (registered 2026-07-25) runs to its 2026-09-01 deadline: ≥3 confirmed instances of a header field changing user behavior → keep evidence-backed; zero → propose v23 cut.
+
 ## v22.5.2 — 2026-08-16
 
 ### Changed

@@ -1,4 +1,4 @@
-# EOS -- Thinker OS v22.5.2
+# EOS -- Thinker OS v22.6.0
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 A small, evidence-tested prompt framework for Claude. One kernel file, five rules, a prose user model, and a published falsification test that cut the framework down to what it could prove -- including the parts the test killed.

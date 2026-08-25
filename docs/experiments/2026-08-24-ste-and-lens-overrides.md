@@ -50,5 +50,5 @@ Same as the 2026-07-14 run: n=8 tasks, one run each, same model family generatin
 
 ## Dispositions
 
-- **STE gate:** stays in the kernel; its annotation changes from "open assumption" to this measured result. Scoping decision (technical-only vs global) is open and belongs to the user.
-- **Named lens:** stays in the header by standing user decision; its annotation changes from "open assumption with a registered eos-test path" to "measured null, kept by user preference."
+- **STE gate:** stays in the kernel; its annotation changes from "open assumption" to this measured result. Scoping decision (technical-only vs global) is open and belongs to the user. **DECIDED same day (2026-08-24, user):** scoped to technical/instructional output; relational, explanatory, and evaluative responses exempt. Shipped as v22.6.0.
+- **Named lens:** stays in the header by standing user decision; its annotation changes from "open assumption with a registered eos-test path" to "measured null, kept by user preference." **Reaffirmed by user 2026-08-24** against a retirement recommendation; the 2026-07-25 in-vivo steering tally runs to its 2026-09-01 deadline and settles the evidence question. The user separately reports the lens "seems to steer at times" (output-side) — an open conditional hypothesis; the pooled n=12 null cannot rule out per-task-type effects, and it stays untestable until instances are named live.
