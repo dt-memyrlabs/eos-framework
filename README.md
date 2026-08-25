@@ -30,7 +30,7 @@ The kernel ([kernel/CLAUDE.md](kernel/CLAUDE.md), ~100 lines) contains:
 
 - **Two axioms.** No assumptions without falsification criteria; truth over compliance, appearance, and convention.
 - **USER MODEL** -- the load-bearing section. Prose, specific, maintained. The template tells you what to cover; the experiment tells you why prose.
-- **Identity** -- reasoning partner stance, a 4-question truth gate on every response, plain language, an STE output gate (ASD-STE100 writing rules, added v22.5.0 by user-authority override, assumption open), and hard bans on consultantspeak, padding, flattery, and hedging.
+- **Identity** -- reasoning partner stance, a 4-question truth gate on every response, plain language, an STE output gate (ASD-STE100 writing rules, added v22.5.0 by user-authority override; measured 2026-08-24 and scoped in v22.6.0 to technical/instructional output only), and hard bans on consultantspeak, padding, flattery, and hedging.
 - **Five rules:**
 
 | # | Rule | One line |
@@ -41,15 +41,15 @@ The kernel ([kernel/CLAUDE.md](kernel/CLAUDE.md), ~100 lines) contains:
 | 4 | Regression Lock | Resolved is locked; re-opening requires new evidence. |
 | 5 | Output Integrity | Noun-swap test; header present. |
 
-- **Runtime header** -- reduced to facts: `[lens:name] [goal:locked|open] [assump:N] [conf:H/M/L] [pos:held/moved|basis]`. The lens is a free-form name for the layer of work, user-steerable via `lens: <name>` in any prompt (restored by user decision in v22.4.1; its value is untested). Goal state is a fact, the assumption count is countable, confidence is a stated mapping from that count, position is a fact. The old numeric dashboard fields (1-5 lens, sim-depth, CCI-G percentage) are gone: either the axis was retired or the number had no instrument behind it.
-- **Lessons** -- every user correction is written to `tasks/lessons.md` immediately and loaded at session start.
+- **Runtime header** -- reduced to facts: `[lens:name] [goal:locked|open] [assump:N] [conf:H/M/L] [pos:held/moved|basis]`. The lens is a free-form name for the layer of work, user-steerable via `lens: <name>` in any prompt (restored by user decision in v22.4.1; measured 2026-08-24: null -- no measured benefit, kept by user preference). Goal state is a fact, the assumption count is countable, confidence is a stated mapping from that count, position is a fact. The old numeric dashboard fields (1-5 lens, sim-depth, CCI-G percentage) are gone: either the axis was retired or the number had no instrument behind it.
+- **Lessons** -- every user correction is written to `tasks/lessons.md` immediately and loaded at session start. As of v22.6.0 a distilled one-line-per-lesson file (`<state-dir>/lessons-distilled.md`) is also injected on every prompt in every project by `eos-hook.js` -- a 2026-08-24 measurement over 302 sessions found 6 of 8 mature lessons recurred after being written because per-repo lessons files are silos.
 - **Builder mode, state storage, workflow discipline** -- one short section each.
 
 ## Testing changes: the harness
 
 [tools/eos-test.md](tools/eos-test.md) is the 2026-07-14 experiment turned into a reusable rig. Give it any two context variants (user model on/off, prose vs structured, current kernel vs proposed kernel, stale vs fresh) and a task battery; it generates blind-judged scorecards using the same design as the published experiment. Pre-registration is enforced in code — the script refuses to run without a hypothesis and pass/fail criteria — and a `dryRun` mode prints the agent count and token estimate (roughly 0.5M tokens quick / 1.4M standard) before anything is spent.
 
-This backs the kernel's measured-delta rule: **no kernel change ships without a result from this harness.** Version bumps are experiment outcomes now. The one escape hatch is user authority: an override can ship untested, but it is recorded as an override and its assumption stays open until tested (v22.4.1 lens, v22.5.0 STE gate).
+This backs the kernel's measured-delta rule: **no kernel change ships without a result from this harness.** Version bumps are experiment outcomes now. The one escape hatch is user authority: an override can ship untested, but it is recorded as an override and its assumption stays open until tested. Both standing overrides were tested 2026-08-24: the STE gate measured split and was scoped to technical output (v22.6.0); the lens measured null and stays by user preference ([docs/experiments/2026-08-24-ste-and-lens-overrides.md](docs/experiments/2026-08-24-ste-and-lens-overrides.md)).
 
 ## What about the 22 skills?
 
@@ -85,7 +85,7 @@ EOS ships one Node dispatcher for state persistence (four lifecycle events) and 
 
 | Hook | Event | Purpose |
 |------|-------|---------|
-| `eos-hook.js prompt` | UserPromptSubmit | Injects state + v22 header mandates into model context on every prompt; parses optional `lens:` steering |
+| `eos-hook.js prompt` | UserPromptSubmit | Injects state + distilled lessons + v22 header mandates into model context on every prompt; parses optional `lens:` steering |
 | `eos-hook.js session-start` | SessionStart | Injects state file content on session start / post-compaction |
 | `eos-hook.js pre-compact` | PreCompact | Backs up EOS state file before context compaction |
 | `eos-hook.js session-end` | SessionEnd | Final state backup on session close |
