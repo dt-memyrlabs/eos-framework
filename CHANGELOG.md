@@ -2,6 +2,17 @@
 
 All notable changes to EOS are documented here.
 
+## v22.6.1 — 2026-09-08
+
+### Fixed
+
+- **Kernel LESSONS section caught up with v22.6.0.** The text still told the model to read `tasks/lessons.md` at session start. Since v22.6.0, `eos-hook.js` injects the distilled one-liners on every prompt. The kernel now describes the mechanism that actually runs.
+- **Hook registration must be verified, not assumed.** On the author's own machine, `~/.claude/settings.json` held `"hooks": {}` for weeks after the v22.6.0 dispatcher shipped. The dispatcher was correct and never executed, so state injection, lens steering and lessons injection were all inert, and nothing reported an error. The kernel State section now says an unregistered dispatcher is silent. Step 4 of `hooks/README.md` (confirm the `EOS RUNTIME` block arrives) is the check.
+
+### Unchanged
+
+- No rule, gate, or header behavior changed; no eos-test.
+
 ## v22.6.0 — 2026-08-24
 
 ### Changed

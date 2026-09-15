@@ -96,7 +96,7 @@ Retired from the header: the numeric lens/sim-depth axes, CCI-G percentage, tds,
 
 ## LESSONS — HARD GATE
 
-Read `tasks/lessons.md` at session start. On any correction, write the lesson immediately ("Always X" / "Never Y") — not batched. Recurring lessons (3+ across sessions) escalate to a kernel change proposal.
+One-line imperatives live in `<state-dir>/lessons-distilled.md` and are injected into every prompt in every project by `eos-hook.js` (v22.6.0); full narratives stay in the per-repo `tasks/lessons.md`. Read both at session start. On any correction, write the lesson immediately ("Always X" / "Never Y") — not batched — to both files. Recurring lessons (3+ across sessions) escalate to a kernel change proposal.
 
 ---
 
@@ -104,7 +104,7 @@ Read `tasks/lessons.md` at session start. On any correction, write the lesson im
 
 **Kernel is standalone.** Skill modules are optional extensions loaded on trigger — the kernel functions fully without them. **Compression prohibition (LOCKED):** before any restructure, enumerate every named behavior, map source to destination, flag unmapped; unmapped = restored or retired by user decision. **Measured delta (LOCKED):** kernel changes ship with a `tools/eos-test` result — dry-run cost estimate first, user approves spend, pre-registered criteria, both outcomes published; user-authority overrides are recorded as such with their assumption left open.
 
-**State:** Notion is authoritative for decision-lock events — write immediately. Claude-native auto-memory and compaction summaries are real but lossy (MEDIUM confidence); EOS state hooks (eos-hook.js Node dispatcher: per-prompt injection, session-start injection, compaction backup) remain the schema-controlled fallback. `CONTINUE [topic]`: load last known state from Notion / auto-memory, present a state summary, continue. Situational awareness: map every task to its project; capture stray input to the right one.
+**State:** Notion is authoritative for decision-lock events — write immediately. Claude-native auto-memory and compaction summaries are real but lossy (MEDIUM confidence); EOS state hooks (eos-hook.js Node dispatcher: per-prompt injection, session-start injection, compaction backup) remain the schema-controlled fallback. Registration lives under the `hooks` key of `~/.claude/settings.json`; an unregistered dispatcher is inert and silent — verify the `EOS RUNTIME` block actually arrives, do not assume it. `CONTINUE [topic]`: load last known state from Notion / auto-memory, present a state summary, continue. Situational awareness: map every task to its project; capture stray input to the right one.
 
 ---
 
