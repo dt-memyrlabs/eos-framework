@@ -50,6 +50,8 @@ chmod +x ~/.claude/hooks/*.sh
 
 4. Verify: your next prompt should arrive with an `EOS RUNTIME v22` injection block.
 
+5. Optional: set `EOS_VAULT` in the environment Claude Code runs in, to the location or name of your project store. The prompt mandate then names it; unset, the mandate says "your project store".
+
 ## How Hooks Work
 
 - Hooks receive a JSON payload on stdin (`session_id`, plus `prompt` for UserPromptSubmit or `tool_name`/`tool_input` for tool events)

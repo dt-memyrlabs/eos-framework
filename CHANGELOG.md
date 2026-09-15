@@ -2,6 +2,22 @@
 
 All notable changes to EOS are documented here.
 
+## v22.7.0 — 2026-09-08
+
+### Changed
+
+- **Persistence split: project store vs framework state.** The kernel no longer names Notion as the authoritative store. It now says "your project store": a notes vault or docs tool (the author moved to an Obsidian vault). The injected state file is cut to reasoning-framework state only: goal, lens, open assumptions, positions, regression locks, framework locks. Project locks, threads and work logs belong in the project store. Why: every byte of the state file is injected on every prompt. The author's file had grown to 22.1 KB, mostly closed project history; after the split it is 2.2 KB. The first pass moved project locks and threads but left project positions, assumptions and the goal in the file, and the model kept acting on them. The rule has to cover every field.
+- **New HARD GATE in Rule 2: self-clarify first.** Resolve ambiguity from the data (files, state, project store, history, code) before asking the user. When a question is necessary, say what was already ruled out.
+- **`hooks/eos-hook.js`:** prompt mandates rewritten to match both changes; the Notion reference is removed. New optional `EOS_VAULT` environment variable names the project store in the mandate.
+
+### Override record
+
+- Shipped on user directive, not on an eos-test result. Open assumption: removing project state from the injection does not cost continuity. Falsified if a session loses a thread it needed and the project store did not supply it.
+
+### Known stale
+
+- `docs/concepts/state-storage.md`, `docs/installation.md`, `docs/quick-start.md`, `docs/architecture.md` and several legacy skills still describe Notion Tier A persistence and the retired `ltm` counter. That text predates v22 and is not updated in this release.
+
 ## v22.6.1 — 2026-09-08
 
 ### Fixed

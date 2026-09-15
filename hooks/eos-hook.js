@@ -22,6 +22,8 @@ const EVENT = process.argv[2] || 'prompt';
 // .claude/settings.json hook commands for per-project state isolation.
 const DIR = process.env.EOS_STATE_DIR || path.join(os.homedir(), '.claude', 'eos-state');
 const STATE = path.join(DIR, 'current-state.json');
+// EOS_VAULT (v22.7.0): optional location or name of the user's project store, named in the prompt mandate.
+const VAULT = process.env.EOS_VAULT || '';
 const BACKUPS = path.join(DIR, 'backups');
 
 function readState() { try { return JSON.parse(fs.readFileSync(STATE, 'utf8')); } catch { return null; } }
@@ -103,7 +105,7 @@ process.stdin.on('end', () => {
       .split(/\r?\n/).filter(l => l.startsWith('- ')).join('\n');
     if (lessons) lines.push('LESSONS (standing, apply to every response):\n' + lessons);
   } catch {}
-  lines.push('MANDATES: begin the response with the v22 runtime header — [lens:name] [goal:locked|open] [assump:N] [conf:H/M/L] [pos:held/moved|basis] — facts only, per Rule 2. Default to brief — expand only when asked. On any state-change trigger (goal, variable lock, assumption open/close, position, threads, decision) write decision-locks to Notion when available and update the state file via the Write tool — max one write per response. Lens steering: "lens: <name>" anywhere in a prompt; "lens: off" to unlock.');
+  lines.push('MANDATES: begin the response with the v22 runtime header — [lens:name] [goal:locked|open] [assump:N] [conf:H/M/L] [pos:held/moved|basis] — facts only, per Rule 2. Default to brief — expand only when asked. Resolve ambiguity from the data before asking the user — a question the files can answer is a defect. Project state lives in ' + (VAULT ? 'the project store at ' + VAULT : 'your project store (notes vault or docs tool)') + ' — write it there on a lock or a close; this state file carries reasoning-framework state only: goal, lens, assumptions, positions, regression locks, framework locks. On any framework state-change (goal, lens, assumption open/close, position, framework lock) update the state file via the Write tool — max one write per response. Lens steering: "lens: <name>" anywhere in a prompt; "lens: off" to unlock.');
 
   out({
     hookSpecificOutput: {
