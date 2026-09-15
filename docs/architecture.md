@@ -1,6 +1,6 @@
 # Architecture
 
-> **Historical (v20-era) — mechanism claims refuted.** The attention-ordering theory below ("earlier context exerts stronger influence"; token ordering as mechanism) was tested 2026-07-14 and did not survive: the supported claim is context *specificity*, and plain prose beat the structured USER MODEL format 14/16 (see docs/experiments/2026-07-14-user-model-falsification.md). The displacement-vs-suppression framing and the attractor-basin naming mechanic remain untested hypotheses, not established mechanics. Kept for provenance.
+> **Historical (v20-era) — mechanism claims refuted.** The attention-ordering theory below ("earlier context exerts stronger influence"; token ordering as mechanism) was tested 2026-07-14 and did not survive: the supported claim is context *specificity*, and plain prose beat the structured USER MODEL format 14/16 (see docs/experiments/2026-07-14-user-model-falsification.md). The displacement-vs-suppression framing and the attractor-basin naming mechanic remain untested hypotheses, not established mechanics. Kept for provenance. Notion appears here as the v20-era project store. It is not required: since v22.7.0 any project store works, and Notion is one optional backend (CHANGELOG v22.7.0).
 
 EOS v20.1.0 architectural philosophy and mechanical design.
 

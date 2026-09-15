@@ -6,6 +6,8 @@ state: trigger-ready
 description: "Contradiction resolution across memory layers — audits auto-memory, Notion, Pieces, and Obsidian for conflicting, stale, or orphaned facts. Triggers on manual invoke or when eos-memory-mgmt detects staleness (ltm >= 5). Uses eos-recall-router for structured retrieval. Presents findings for user approval before executing resolutions."
 ---
 
+> **Store note (v22.8.1):** Notion is one optional project-store backend, not a requirement. Wherever this skill says Notion, a Spoke or Hub page, or Tier A, substitute your own project store (a notes vault or docs tool). With no external store configured, project state lives in auto-memory; the kernel does not depend on this skill. See CHANGELOG v22.7.0.
+
 # EOS Fact Check Skill
 
 ## Trigger

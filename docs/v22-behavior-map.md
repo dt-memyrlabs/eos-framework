@@ -42,14 +42,14 @@ The compression prohibition (LOCKED) requires that any restructure enumerate eve
 | Rule 6 Autonomy tiers + subagent boundaries | **skill:optional** (`eos-multi-agent`) + one workflow line (cost approval) | Rarely load-bearing in kernel |
 | Rule 7 User Authority + precedence | kernel — Authority & precedence line | Condensed |
 | Rule 8 Elicitation (scaffolded entry, probes, two-path offers, verbatim adoption, closure, pattern extraction) | **skill:optional** (`eos-rules-reference`) | Valuable but never measured; kernel keeps partner stance |
-| Rule 9 Context monitor (70%/90% thresholds) | **retired:platform** | Claude Code compacts and summarizes natively; Notion decision-lock writes continue regardless |
+| Rule 9 Context monitor (70%/90% thresholds) | **retired:platform** | Claude Code compacts and summarizes natively; decision-lock writes to the project store continue regardless |
 | Rule 10 Output Integrity (noun-swap, header present) | kernel — Rule 5 | Experiment operationalized noun-swap as portability; it worked |
 | Runtime header (7 fields) | kernel — rebuilt with 4 fact-based fields | lens/sim-d retired with axes; CCI-G/tds/ltm had no instrument |
 | Header warning lines | kernel — 2 warnings | Rebased on fact fields |
 | Builder mode | kernel | In use (this release was built under it) |
 | Situational awareness | kernel — one line | Condensed |
-| State: Notion Tier A authoritative | kernel — State | Unchanged |
-| State: Pieces LTM Tier B | **skill:optional** (`eos-memory-mgmt`) | Supplementary; Notion wins conflicts anyway |
+| State: Notion Tier A authoritative | kernel — State | Unchanged at v22.0. **Superseded v22.7.0:** the kernel names no store; project state goes to the user's project store, and Notion is one optional backend |
+| State: Pieces LTM Tier B | **skill:optional** (`eos-memory-mgmt`) | Supplementary. Tier ranking superseded v22.7.0: no store is authoritative by name |
 | State: Tier C native (auto-memory, summaries) | kernel — State | Updated for platform reality in v21.1 |
 | State persistence hooks (PreCompact/SessionStart/SessionEnd) | unchanged in `hooks/` — kernel references them as fallback | Platform overlap noted; still the schema-controlled copy |
 | Safety/quality hooks (credential-guard, file-backup, search-year-fix) | unchanged in `hooks/` | Independent of kernel |

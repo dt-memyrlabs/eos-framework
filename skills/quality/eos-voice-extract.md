@@ -6,6 +6,8 @@ state: trigger-ready
 description: "Session voice fact extraction — scans conversation for uncaptured directives, preferences, habits, beliefs, and goals. Classifies using CORE-derived taxonomy. Cross-layer deduplication checks all populated persistence layers (auto-memory, Notion, Pieces) before writing. Presents extracted facts for user approval before writing. Triggers at session end, on CONTINUE keyword, or manual invoke."
 ---
 
+> **Store note (v22.8.1):** Notion is one optional project-store backend, not a requirement. Wherever this skill says Notion, a Spoke or Hub page, or Tier A, substitute your own project store (a notes vault or docs tool). With no external store configured, project state lives in auto-memory; the kernel does not depend on this skill. See CHANGELOG v22.7.0.
+
 # EOS Voice Extract Skill
 
 ## Trigger

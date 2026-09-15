@@ -6,6 +6,8 @@ state: trigger-ready
 description: "New project creation and initialization. Triggers whenever the user says 'new project', 'start a project', 'create a project', 'spin up a project', or any equivalent phrasing that indicates they want to begin tracking a new initiative. Also triggers when the user names something that doesn't exist in the Hub and wants to formalize it. Creates Notion Hub entry and Spoke with Core sections. Do NOT trigger for casual mentions of ideas or brainstorming — only when the user signals intent to track and manage."
 ---
 
+> **Store note (v22.8.1):** Notion is one optional project-store backend, not a requirement. Wherever this skill says Notion, a Spoke or Hub page, or Tier A, substitute your own project store (a notes vault or docs tool). With no external store configured, project state lives in auto-memory; the kernel does not depend on this skill. See CHANGELOG v22.7.0.
+
 > **v22 status: legacy.** This skill predates the v22 evidence release and references machinery the kernel retired (see `docs/v22-behavior-map.md`) — lens/sim-depth axes, CCI scoring, or v21 rule numbering. It still loads as a standalone extension, but using it may reintroduce retired behavior. Revalidate against the v22 kernel before updating `kernel_compat`.
 
 # Module A: Cold-Start (New Project Creation)

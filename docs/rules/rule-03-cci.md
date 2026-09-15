@@ -1,6 +1,6 @@
 # Rule 3: CCI (Complete Context Index)
 
-> **Historical (v20/v21-era).** This document describes machinery retired or revised in v22 — see CHANGELOG.md and docs/v22-behavior-map.md at the repo root. Kept for provenance; for current behavior start at the README.
+> **Historical (v20/v21-era).** This document describes machinery retired or revised in v22 — see CHANGELOG.md and docs/v22-behavior-map.md at the repo root. Kept for provenance; for current behavior start at the README. Notion appears here as the v20-era project store. It is not required: since v22.7.0 any project store works, and Notion is one optional backend (CHANGELOG v22.7.0).
 
 ## Purpose
 

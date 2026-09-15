@@ -2,6 +2,24 @@
 
 All notable changes to EOS are documented here.
 
+## v22.8.1 — 2026-09-15
+
+### Changed
+
+- **Notion is optional everywhere.** The kernel stopped naming Notion in v22.7.0; the docs and skills had not caught up.
+  - The 10 historical docs that describe Notion keep their text for provenance. Their banner now states that Notion is not required.
+  - The 14 skills that read or write Notion carry a store note: Notion is one optional backend, substitute your own project store, and with none configured project state lives in auto-memory.
+  - `docs/skill-authoring.md` examples say "project store" instead of Notion, Spoke pages and Tier A/B/C.
+  - `docs/v22-behavior-map.md` rows that named Notion as the current authoritative store are marked superseded by v22.7.0.
+
+### Unchanged
+
+- No kernel, hook, rule, or header change. Skill logic is not rewritten; the store note tells the model to substitute. `tasks/lessons.md` and earlier CHANGELOG entries keep their Notion references as history.
+
+### Known stale
+
+- `docs/skill-authoring.md` still describes v20-era skill registration (`skill_versions`, `kernel_compat` checks, Rule 6 autonomy tiers). The v22 kernel has none of these.
+
 ## v22.8.0 — 2026-09-14
 
 ### Added

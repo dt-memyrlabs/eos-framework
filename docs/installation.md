@@ -1,6 +1,6 @@
 # Installation
 
-> **Historical (v20-era setup).** These instructions install the v20/v21 stack (18+ skills, lens/sim-depth controls, the old 7-field header). For current v22 setup — kernel plus the optional eos-feedback-loops skill — use the Quick start in the repo README. Kept for provenance.
+> **Historical (v20-era setup).** These instructions install the v20/v21 stack (18+ skills, lens/sim-depth controls, the old 7-field header). For current v22 setup — kernel plus the optional eos-feedback-loops skill — use the Quick start in the repo README. Kept for provenance. Notion appears here as the v20-era project store. It is not required: since v22.7.0 any project store works, and Notion is one optional backend (CHANGELOG v22.7.0).
 
 Platform-specific setup for EOS v20.1.0.
 

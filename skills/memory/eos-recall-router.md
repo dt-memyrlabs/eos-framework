@@ -6,6 +6,8 @@ state: trigger-ready
 description: "Intent-routed memory retrieval — classifies recall queries by type and routes to the optimal persistence layer. Replaces ad-hoc retrieval with structured dispatch. Triggers on any memory retrieval need (internal to other skills, explicit user recall, CONTINUE keyword). Pattern: classify → route to primary layer → fallback to secondary → escalate to cross-layer."
 ---
 
+> **Store note (v22.8.1):** Notion is one optional project-store backend, not a requirement. Wherever this skill says Notion, a Spoke or Hub page, or Tier A, substitute your own project store (a notes vault or docs tool). With no external store configured, project state lives in auto-memory; the kernel does not depend on this skill. See CHANGELOG v22.7.0.
+
 # EOS Recall Router Skill
 
 ## Trigger

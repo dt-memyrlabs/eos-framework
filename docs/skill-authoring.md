@@ -78,7 +78,7 @@ The description is not documentation -- it is the **trigger document**. The mode
 Example from `eos-cold-start`:
 
 ```yaml
-description: "New project creation and initialization. Triggers whenever the user says 'new project', 'start a project', 'create a project', 'spin up a project', or any equivalent phrasing that indicates they want to begin tracking a new initiative. Also triggers when the user names something that doesn't exist in the Hub and wants to formalize it. Creates Notion Hub entry and Spoke with Core sections. Do NOT trigger for casual mentions of ideas or brainstorming -- only when the user signals intent to track and manage."
+description: "New project creation and initialization. Triggers whenever the user says 'new project', 'start a project', 'create a project', 'spin up a project', or any equivalent phrasing that indicates they want to begin tracking a new initiative. Also triggers when the user names something that doesn't exist in the Hub and wants to formalize it. Creates the project's entry and state page in the user's project store. Do NOT trigger for casual mentions of ideas or brainstorming -- only when the user signals intent to track and manage."
 ```
 
 ---
@@ -109,7 +109,7 @@ Number steps sequentially. Each step is a discrete action or decision point.
 [Action description. Reference kernel rules by number when behavior depends on them.]
 ```
 
-Steps should be imperative: "Check persistence tier," "Extract goal statement," "Write to Notion Spoke." Not "The system checks" or "This step involves."
+Steps should be imperative: "Check persistence tier," "Extract goal statement," "Write to the project store." Not "The system checks" or "This step involves."
 
 ### Decision points
 
@@ -117,9 +117,8 @@ When a step has branching logic, use explicit conditionals:
 
 ```markdown
 ### A3. Storage Classification
-- Notion MCP available -> Tier A. Proceed to A4.
-- Notion unavailable, Pieces available -> Tier B. Flag reduced persistence.
-- Neither available -> Tier C. Flag conversation-only state.
+- Project store reachable -> write state there. Proceed to A4.
+- Project store unreachable -> keep state in auto-memory. Flag reduced persistence.
 ```
 
 ### Kernel rule references
@@ -163,7 +162,7 @@ description: "Triggers when CCI-G reaches 80%. Runs Limiter Analysis automatical
 Similar to state transitions but based on continuous metrics rather than discrete state changes.
 
 ```yaml
-description: "Triggers when ltm counter reaches 5 or higher. Flags persistence staleness."
+description: "Triggers when 5 or more exchanges pass after a decision without a write to the project store. Flags persistence staleness."
 ```
 
 ### Compound triggers
@@ -189,9 +188,9 @@ Every skill step operates at an autonomy tier defined by kernel Rule 6.
 Assign the tier explicitly in each step:
 
 ```markdown
-### A4. Create Spoke Page
+### A4. Create Project State Page
 Autonomy: Tier 1.
-Create the Notion Spoke page with Core sections...
+Create the project's state page in the project store...
 ```
 
 Default conservative: if unsure, assign Tier 2 or 3. Tier 1 is reserved for operations that are clearly safe to execute without user input.
@@ -209,9 +208,9 @@ For skills that handle complex operations, include a failure modes table at the 
 
 | Condition | Detection | Response |
 |-----------|-----------|----------|
-| Notion MCP unavailable | M1 tier detection returns no Notion tools | Degrade to Tier C. Flag CCI-F impact. Proceed. |
+| Project store unreachable | Store tools missing, or the write fails | Keep state in auto-memory. Flag reduced persistence. Proceed. |
 | User provides vague goal | Goal statement fails specificity check | Push for specificity per Rule 1. Do not proceed. |
-| Spoke page already exists | Notion search returns existing page for project name | Load existing Spoke. Do not create duplicate. |
+| State page already exists | Project store search returns a page for the project name | Load it. Do not create a duplicate. |
 ```
 
 ---

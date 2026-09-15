@@ -7,6 +7,8 @@ description: Proposes CLAUDE.md kernel edits based on session outcomes. Tier 3 â
 trigger: session-end, explicit request ("update kernel", "propose kernel change", "self-modify")
 ---
 
+> **Store note (v22.8.1):** Notion is one optional project-store backend, not a requirement. Wherever this skill says Notion, a Spoke or Hub page, or Tier A, substitute your own project store (a notes vault or docs tool). With no external store configured, project state lives in auto-memory; the kernel does not depend on this skill. See CHANGELOG v22.7.0.
+
 > **v22 status: legacy.** This skill predates the v22 evidence release and references machinery the kernel retired (see `docs/v22-behavior-map.md`) â€” lens/sim-depth axes, CCI scoring, or v21 rule numbering. It still loads as a standalone extension, but using it may reintroduce retired behavior. Revalidate against the v22 kernel before updating `kernel_compat`.
 
 # EOS Kernel Updater
