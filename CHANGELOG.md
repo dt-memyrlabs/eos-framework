@@ -2,6 +2,16 @@
 
 All notable changes to EOS are documented here.
 
+## v22.8.0 — 2026-09-14
+
+### Added
+
+- **Lens contracts.** The lens measured null because nothing branched on its value: it was a label plus an instruction to obey the label. `eos-hook.js` now reads `<state-dir>/lenses.md` and injects the active lens's contract: `evidence`, `done`, `scope`, `guard`. Only the active block is injected (about 600 bytes), so the registry can grow without per-prompt cost. An unknown lens name is flagged instead of accepted. Example registry with seven lenses: `examples/lenses.md`.
+
+### Pre-registered
+
+- The model appends one line to `<state-dir>/lens-log.jsonl` each time a contract changes an output (blocks a "done", forces a skipped check, refuses an out-of-scope edit). Criterion: ≥5 logged instances within 30 days of adoption means the lens earns its place on evidence. Fewer means the contract is decoration too, and the cut returns. The user can strike any entry judged padded. The v22.7.1 null result stands for the bare label and is not revised by this release.
+
 ## v22.7.1 — 2026-09-08
 
 ### Decision recorded

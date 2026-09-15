@@ -7,7 +7,7 @@
 // Store stub, which prints "Redirecting..." instead of executing).
 // Usage: node eos-hook.js <prompt|session-start|pre-compact|session-end>
 //
-// Lens steering (UserPromptSubmit; lens is a header field as of v22.4.1 — value untested, see changelog):
+// Lens steering (UserPromptSubmit; header field since v22.4.1, binding contract from lenses.md since v22.8.0):
 // the user writes "lens: <name>" (or /lens <name>, lens=<name>) anywhere in a
 // prompt to steer + lock a free-form layer-of-work label. "lens: off|free|unlock|auto"
 // returns the choice to the model. The directive is persisted to the state file
@@ -97,6 +97,33 @@ process.stdin.on('end', () => {
     lines.push(`state: none — fresh session. Initialize ${STATE} on first state-change event.`);
   }
   if (steer) lines.push(steer);
+  // Lens contract (v22.8.0). Before this, nothing consumed the lens value —
+  // it was a label plus an instruction to obey the label, which is why the
+  // 2026-08-24 eos-test measured it at null. Now the lens selects a binding
+  // scope contract from lenses.md: what counts as evidence, what "done" means,
+  // what may be touched, what failure mode to guard against. Only the active
+  // lens's block is injected, so the registry can grow without per-prompt cost.
+  if (state && state.lens) {
+    try {
+      const reg = fs.readFileSync(path.join(DIR, 'lenses.md'), 'utf8');
+      const blocks = {};
+      let cur = null;
+      for (const l of reg.split(/\r?\n/)) {
+        const h = l.match(/^##\s+(.+?)\s*$/);
+        if (h) { cur = h[1].toLowerCase(); blocks[cur] = []; continue; }
+        if (cur && /^(evidence|done|scope|guard):/i.test(l)) blocks[cur].push(l.trim());
+      }
+      const key = String(state.lens).toLowerCase();
+      if (blocks[key] && blocks[key].length) {
+        lines.push(`LENS CONTRACT — ${state.lens} (BINDING this response; a claim that fails "evidence" does not ship, "done" is not sayable until met, work outside "scope" needs the user first):\n` + blocks[key].join('\n') +
+          `\nIf this contract does not fit the work in front of you, say so out loud and name the lens that does — never switch silently. When the contract changes the output (blocks a "done", forces a check you would have skipped, refuses an out-of-scope edit), append one line to ${path.join(DIR, 'lens-log.jsonl')} — that log is the instrument for whether this field earns its place.`);
+      } else {
+        lines.push(`LENS "${state.lens}" has no contract in lenses.md. Known: ${Object.keys(blocks).join(', ') || '(registry unreadable)'}. Flag this and either steer to a known lens or write the contract — do not proceed on the bare label.`);
+      }
+    } catch {
+      lines.push(`LENS CONTRACT UNAVAILABLE — ${path.join(DIR, 'lenses.md')} could not be read. Say so; do not treat the lens as binding.`);
+    }
+  }
   // Distilled lessons: injected every prompt in every project. Fix for the
   // 2026-08-24 recurrence measurement — per-repo tasks/lessons.md silos meant
   // project sessions never saw the global lessons (6/8 mature lessons recurred).
