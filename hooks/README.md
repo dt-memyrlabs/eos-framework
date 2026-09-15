@@ -14,7 +14,6 @@ One script, `eos-hook.js`, handles all four lifecycle events:
 | `session-start` | SessionStart | Injects state file content on session start / post-compaction reload |
 | `pre-compact` | PreCompact | Backs up the state file before compaction (keeps 20), warns on stale state (>5min) |
 | `session-end` | SessionEnd | Final state backup on session close (keeps 10) |
-| `pretool` | PreToolUse (`Write|Edit|NotebookEdit`) | The picture gate (v22.9.0): blocks the tool while `goal.state` is not `locked`, except writes to the state dir, the project store (`EOS_VAULT`) and `tasks/lessons.md` |
 
 State injection uses `hookSpecificOutput.additionalContext` — the field that reaches model context. The pre-v22.4 bash state hooks used `systemMessage`, which only displays to the human: state recovery could not function through it on any platform. They also required `python3`, which on Windows commonly resolves to the Microsoft Store stub (prints "Redirecting..." instead of executing). Both failures are why they were replaced.
 
@@ -34,11 +33,11 @@ The user steers the layer of work by typing `lens: <name>` (or `/lens <name>`, `
 
 ## Picture gate (v22.9.0)
 
-`goal` in the state file is an object with `state` = `open` | `pictured` | `locked`, plus `text`, `picture` (end state, in scope, out of scope, done) and `confirmed`. The prompt hook injects `BUILD GATE CLOSED` or `BUILD GATE OPEN` every turn, with the picture on record while it waits for confirmation. The `pretool` event is the deterministic half: while the gate is closed, Write/Edit/NotebookEdit outside the allowlist are denied with a reason that names the state and the fix.
+`goal` in the state file is an object with `state` = `open` | `pictured` | `locked`, plus `text`, `picture` (end state, in scope, out of scope, done) and `confirmed`. The prompt hook injects `BUILD GATE CLOSED` or `BUILD GATE OPEN` every turn, with the picture on record while it waits for confirmation. That injection is the whole enforcement: the gate is a rule the model follows because it is in front of it, not a tool block. A PreToolUse blocker (and a shell-command classifier) were built and deleted on 2026-09-15 — a thinking framework is not a permission system.
 
 Directives, parsed before the model sees the prompt: `goal: confirmed` (also `confirm`, `match`, `locked`) locks the gate and records the confirmation; `goal: open` (or `reopen`) reopens it. A legacy `{active_goal, goal_locked}` state is upgraded in place; a legacy lock is recorded as "no picture on record", not given one.
 
-Known hole: Bash is not filtered. A file write through a shell command passes the gate. Filtering Bash without breaking read-only commands is separate work.
+No tool is blocked by design. If you want tool-level enforcement, that belongs in Claude Code's own permission settings, not here.
 
 ## Installation
 
@@ -51,7 +50,7 @@ cp hooks/*.sh ~/.claude/hooks/
 chmod +x ~/.claude/hooks/*.sh
 ```
 
-2. Merge the hook configuration from `hooks-settings.json` (five EOS events since v22.9.0: four lifecycle plus the `pretool` gate) into your `~/.claude/settings.json` or project-level `.claude/settings.local.json`.
+2. Merge the hook configuration from `hooks-settings.json` into your `~/.claude/settings.json` or project-level `.claude/settings.local.json`.
 
    **Everything must be nested under the top-level `"hooks"` key.** Event blocks placed at the top level of settings.json are silently ignored — they appear registered but never fire.
 

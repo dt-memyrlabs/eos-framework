@@ -5,7 +5,7 @@
 // (displays to the human; never reaches model context — additionalContext does),
 // and they depended on python3 (on Windows this often resolves to the Microsoft
 // Store stub, which prints "Redirecting..." instead of executing).
-// Usage: node eos-hook.js <prompt|session-start|pre-compact|session-end|pretool>
+// Usage: node eos-hook.js <prompt|session-start|pre-compact|session-end>
 //
 // Lens steering (UserPromptSubmit; header field since v22.4.1, binding contract from lenses.md since v22.8.0):
 // the user writes "lens: <name>" (or /lens <name>, lens=<name>) anywhere in a
@@ -42,7 +42,9 @@ function out(obj) { process.stdout.write(JSON.stringify(obj)); }
 // Picture gate (v22.9.0). goal.state is one of: open (no picture), pictured (the
 // model has written its picture — end state, in, out, done — and is waiting for
 // the user to confirm the MATCH), locked (user confirmed). Build actions are
-// allowed only at locked. Legacy shape {active_goal, goal_locked} is upgraded
+// allowed only at locked — as a rule the model follows and the hook reminds it of
+// every prompt, not as a tool block (a PreToolUse blocker was built and deleted
+// 2026-09-15: a thinking framework is not a permission system). Legacy shape {active_goal, goal_locked} is upgraded
 // in place: a legacy locked goal stays locked (no confirmed picture exists for
 // it, and that is recorded rather than invented).
 function normalizeGoal(state) {
@@ -67,16 +69,6 @@ function gateText(g) {
   }
   return 'BUILD GATE OPEN — goal:locked' + (g.confirmed ? ' (' + g.confirmed + ')' : '') + '. If the work in front of you no longer fits the goal text, say so and reopen with "goal: open" rather than building on a picture the user has not confirmed.';
 }
-// Paths a closed gate must never block: the framework's own state, the project
-// store (EOS_VAULT, if set), and lesson files (a correction must always be writable).
-const ALLOW = [DIR].concat(process.env.EOS_VAULT ? [process.env.EOS_VAULT] : []).map(p => path.resolve(p).toLowerCase());
-function allowed(fp) {
-  if (!fp) return false;
-  const r = path.resolve(String(fp)).toLowerCase();
-  if (ALLOW.some(a => r === a || r.startsWith(a + path.sep))) return true;
-  return /[\\/]tasks[\\/]lessons\.md$/.test(r);
-}
-
 let raw = '';
 process.stdin.on('data', d => raw += d);
 process.stdin.on('end', () => {
@@ -86,24 +78,6 @@ process.stdin.on('end', () => {
   if (EVENT === 'session-end') {
     backup('final', sid, 10);
     out({ continue: true });
-    return;
-  }
-
-  if (EVENT === 'pretool') {
-    // PreToolUse — the deterministic half of the picture gate. Blocks Write/Edit/
-    // NotebookEdit outside the allowlist while goal.state != locked. Bash is NOT
-    // filtered: a Bash filter that catches file writes without catching reads is
-    // a separate piece of work, and this hole is documented in the kernel.
-    const state = readState();
-    const g = normalizeGoal(state);
-    const tool = String(input.tool_name || '');
-    const fp = input.tool_input && (input.tool_input.file_path || input.tool_input.notebook_path);
-    if (g && g.state !== 'locked' && /^(Write|Edit|NotebookEdit)$/.test(tool) && !allowed(fp)) {
-      const reason = `EOS BUILD GATE: goal:${g.state}. ${tool} on ${fp || '(no path)'} is a build action and the user has not confirmed the picture. Show the picture and get the match confirmed, or the user sends "goal: confirmed".`;
-      out({ decision: 'block', reason, hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny', permissionDecisionReason: reason } });
-      return;
-    }
-    out({ continue: true, suppressOutput: true });
     return;
   }
 

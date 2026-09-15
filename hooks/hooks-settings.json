@@ -69,17 +69,6 @@
             "command": "bash ~/.claude/hooks/search-year-fix.sh"
           }
         ]
-      },
-      {
-        "matcher": "Write|Edit|NotebookEdit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node \"$HOME/.claude/scripts/eos-hook.js\" pretool",
-            "timeout": 10,
-            "statusMessage": "EOS picture gate"
-          }
-        ]
       }
     ]
   }

@@ -2,6 +2,17 @@
 
 All notable changes to EOS are documented here.
 
+## v22.9.1 — 2026-09-15
+
+### Removed
+
+- **The tool-blocking layer.** v22.9.0 shipped a `pretool` PreToolUse event that denied Write/Edit/NotebookEdit while the picture gate was closed; a Bash/PowerShell command classifier to close the shell hole was built and tested the same day. Both are deleted, same day, on the user's drift flag: EOS is a thinking framework — ground rules, thinking through responses, a header that shows assumptions and goal lock, a lens that steers — and a second permission system inside it is not thinking. Tool-level enforcement belongs in Claude Code's own permission settings.
+- The picture gate itself is unchanged: Rule 1, the three-state `goal` header field, and the per-prompt `BUILD GATE` reminder. It is a rule the model follows because it is in front of it. `hooks-settings.json` no longer registers a `pretool` event.
+
+### Lesson
+
+- Approving each step is not approving the sum. Five approved increments ("make the lens do something", "build the gate", "close the Bash hole") turned a thinking framework into a permission system. Check the pile against the stated purpose, especially when the author has already said they are the interested party in the direction.
+
 ## v22.9.0 — 2026-09-15
 
 ### Changed
