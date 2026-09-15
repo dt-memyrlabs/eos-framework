@@ -2,6 +2,18 @@
 
 All notable changes to EOS are documented here.
 
+## v22.9.0 — 2026-09-15
+
+### Changed
+
+- **Rule 1 is now a picture gate.** `goal` was a binary: it flipped to `locked` the moment a goal sentence existed and stayed there. In one session it read `locked` through three corrections of what the goal actually was. It is now three states — `open` (no picture), `pictured` (the model has written its own picture: end state, in scope, out of scope, what done looks like; waiting for the user to confirm the match, not the topic), `locked` (the user confirmed). Build actions are allowed only at `locked`. Builder mode moves behind the gate: "build X" with the gate closed means write the picture of X.
+- **Enforced two ways.** The prompt hook injects `BUILD GATE CLOSED/OPEN` every turn, with the picture on record while it waits. A new `pretool` event (PreToolUse on `Write|Edit|NotebookEdit`) denies the tool while the gate is closed, except writes to the state dir, the project store (`EOS_VAULT`) and `tasks/lessons.md`. Directives `goal: confirmed` and `goal: open` are parsed before the model sees the prompt, like lens steering. Legacy `{active_goal, goal_locked}` state is upgraded in place.
+- **Known hole:** Bash is not filtered. A shell command that writes a file passes the gate.
+
+### Override record
+
+- Shipped on user directive, no eos-test. Open assumption: the gate reduces mid-build corrections of the picture. Pre-registered baseline: 3 in the session that produced it. Falsified if the per-session count does not fall over the next 10 sessions.
+
 ## v22.8.1 — 2026-09-15
 
 ### Changed

@@ -5,7 +5,7 @@
 // (displays to the human; never reaches model context — additionalContext does),
 // and they depended on python3 (on Windows this often resolves to the Microsoft
 // Store stub, which prints "Redirecting..." instead of executing).
-// Usage: node eos-hook.js <prompt|session-start|pre-compact|session-end>
+// Usage: node eos-hook.js <prompt|session-start|pre-compact|session-end|pretool>
 //
 // Lens steering (UserPromptSubmit; header field since v22.4.1, binding contract from lenses.md since v22.8.0):
 // the user writes "lens: <name>" (or /lens <name>, lens=<name>) anywhere in a
@@ -39,6 +39,44 @@ function backup(prefix, sessionId, keep) {
 }
 function out(obj) { process.stdout.write(JSON.stringify(obj)); }
 
+// Picture gate (v22.9.0). goal.state is one of: open (no picture), pictured (the
+// model has written its picture — end state, in, out, done — and is waiting for
+// the user to confirm the MATCH), locked (user confirmed). Build actions are
+// allowed only at locked. Legacy shape {active_goal, goal_locked} is upgraded
+// in place: a legacy locked goal stays locked (no confirmed picture exists for
+// it, and that is recorded rather than invented).
+function normalizeGoal(state) {
+  if (!state) return null;
+  if (state.goal && typeof state.goal === 'object' && state.goal.state) return state.goal;
+  const g = {
+    state: state.goal_locked ? 'locked' : 'open',
+    text: state.active_goal || '',
+    picture: null,
+    confirmed: state.goal_locked ? 'legacy goal_locked=true (no picture on record)' : null,
+  };
+  state.goal = g;
+  delete state.active_goal; delete state.goal_locked;
+  return g;
+}
+function gateText(g) {
+  if (!g || g.state === 'open') {
+    return 'BUILD GATE CLOSED — goal:open. No confirmed picture exists. Resolve what the data can settle first (self-clarify), then write the PICTURE in your own words, not the user\'s echoed back: end state; in scope; out of scope; what "done" looks like. Ask only what the data could not settle. Output until the user confirms the match = the picture and questions. No file writes, no builds, no deploys, no "let me just". When you have written the picture, set goal.state=pictured in the state file.';
+  }
+  if (g.state === 'pictured') {
+    return 'BUILD GATE CLOSED — goal:pictured. The picture is waiting for the user to confirm the MATCH (not the topic). If the user has not seen it this turn, show it. If the user corrects it, revise and show again. Build nothing. When the user confirms, set goal.state=locked with the confirmation quoted in goal.confirmed. The user can also send "goal: confirmed" directly.\nPICTURE ON RECORD: ' + JSON.stringify(g.picture || g.text);
+  }
+  return 'BUILD GATE OPEN — goal:locked' + (g.confirmed ? ' (' + g.confirmed + ')' : '') + '. If the work in front of you no longer fits the goal text, say so and reopen with "goal: open" rather than building on a picture the user has not confirmed.';
+}
+// Paths a closed gate must never block: the framework's own state, the project
+// store (EOS_VAULT, if set), and lesson files (a correction must always be writable).
+const ALLOW = [DIR].concat(process.env.EOS_VAULT ? [process.env.EOS_VAULT] : []).map(p => path.resolve(p).toLowerCase());
+function allowed(fp) {
+  if (!fp) return false;
+  const r = path.resolve(String(fp)).toLowerCase();
+  if (ALLOW.some(a => r === a || r.startsWith(a + path.sep))) return true;
+  return /[\\/]tasks[\\/]lessons\.md$/.test(r);
+}
+
 let raw = '';
 process.stdin.on('data', d => raw += d);
 process.stdin.on('end', () => {
@@ -48,6 +86,24 @@ process.stdin.on('end', () => {
   if (EVENT === 'session-end') {
     backup('final', sid, 10);
     out({ continue: true });
+    return;
+  }
+
+  if (EVENT === 'pretool') {
+    // PreToolUse — the deterministic half of the picture gate. Blocks Write/Edit/
+    // NotebookEdit outside the allowlist while goal.state != locked. Bash is NOT
+    // filtered: a Bash filter that catches file writes without catching reads is
+    // a separate piece of work, and this hole is documented in the kernel.
+    const state = readState();
+    const g = normalizeGoal(state);
+    const tool = String(input.tool_name || '');
+    const fp = input.tool_input && (input.tool_input.file_path || input.tool_input.notebook_path);
+    if (g && g.state !== 'locked' && /^(Write|Edit|NotebookEdit)$/.test(tool) && !allowed(fp)) {
+      const reason = `EOS BUILD GATE: goal:${g.state}. ${tool} on ${fp || '(no path)'} is a build action and the user has not confirmed the picture. Show the picture and get the match confirmed, or the user sends "goal: confirmed".`;
+      out({ decision: 'block', reason, hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny', permissionDecisionReason: reason } });
+      return;
+    }
+    out({ continue: true, suppressOutput: true });
     return;
   }
 
@@ -86,7 +142,27 @@ process.stdin.on('end', () => {
       }
       try { writeState(state); } catch {}
     }
+    // Goal directives: "goal: confirmed" locks (the user confirming the match in
+    // their own words); "goal: open" reopens the gate. Both persist before the
+    // model sees the prompt, same as lens steering.
+    const gm = prompt.match(/(?:^|[\s,.!?])goal\s*[:=]\s*(confirmed|confirm|match|locked|open|reopen)\b/i);
+    if (gm) {
+      state = state || { eos_version: 'v22.9.0' };
+      const g = normalizeGoal(state) || (state.goal = { state: 'open', text: '', picture: null, confirmed: null });
+      const v = gm[1].toLowerCase();
+      state.session_id = sid; state.timestamp = new Date().toISOString();
+      if (v === 'open' || v === 'reopen') {
+        g.state = 'open'; g.confirmed = null;
+        steer += (steer ? '\n' : '') + 'GOAL REOPENED by the user this turn. Write a fresh picture before any build action.';
+      } else {
+        g.state = 'locked'; g.confirmed = 'user directive "goal: ' + v + '" ' + new Date().toISOString().slice(0, 10);
+        steer += (steer ? '\n' : '') + 'GOAL CONFIRMED by the user this turn — the picture on record is the match. Build gate open.';
+      }
+      try { writeState(state); } catch {}
+    }
   }
+  const goal = normalizeGoal(state);
+
 
   const lines = [];
   lines.push(`EOS RUNTIME v22 (deterministic ${EVENT === 'prompt' ? 'per-prompt' : 'session-start'} injection):`);
@@ -97,6 +173,7 @@ process.stdin.on('end', () => {
     lines.push(`state: none — fresh session. Initialize ${STATE} on first state-change event.`);
   }
   if (steer) lines.push(steer);
+  if (state) lines.push(gateText(goal));
   // Lens contract (v22.8.0). Before this, nothing consumed the lens value —
   // it was a label plus an instruction to obey the label, which is why the
   // 2026-08-24 eos-test measured it at null. Now the lens selects a binding
@@ -132,7 +209,7 @@ process.stdin.on('end', () => {
       .split(/\r?\n/).filter(l => l.startsWith('- ')).join('\n');
     if (lessons) lines.push('LESSONS (standing, apply to every response):\n' + lessons);
   } catch {}
-  lines.push('MANDATES: begin the response with the v22 runtime header — [lens:name] [goal:locked|open] [assump:N] [conf:H/M/L] [pos:held/moved|basis] — facts only, per Rule 2. Default to brief — expand only when asked. Resolve ambiguity from the data before asking the user — a question the files can answer is a defect. Project state lives in ' + (VAULT ? 'the project store at ' + VAULT : 'your project store (notes vault or docs tool)') + ' — write it there on a lock or a close; this state file carries reasoning-framework state only: goal, lens, assumptions, positions, regression locks, framework locks. On any framework state-change (goal, lens, assumption open/close, position, framework lock) update the state file via the Write tool — max one write per response. Lens steering: "lens: <name>" anywhere in a prompt; "lens: off" to unlock.');
+  lines.push('MANDATES: begin the response with the v22 runtime header — [lens:name] [goal:open|pictured|locked] [assump:N] [conf:H/M/L] [pos:held/moved|basis] — facts only, per Rule 2. goal is the picture-gate state, not whether a goal sentence exists. Default to brief — expand only when asked. Resolve ambiguity from the data before asking the user — a question the files can answer is a defect. Project state lives in ' + (VAULT ? 'the project store at ' + VAULT : 'your project store (notes vault or docs tool)') + ' — write it there on a lock or a close; this state file carries reasoning-framework state only: goal, lens, assumptions, positions, regression locks, framework locks. On any framework state-change (goal, lens, assumption open/close, position, framework lock) update the state file via the Write tool — max one write per response. Lens steering: "lens: <name>" anywhere in a prompt; "lens: off" to unlock.');
 
   out({
     hookSpecificOutput: {
