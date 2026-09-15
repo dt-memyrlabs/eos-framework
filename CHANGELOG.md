@@ -2,6 +2,16 @@
 
 All notable changes to EOS are documented here.
 
+## v22.7.1 — 2026-09-08
+
+### Decision recorded
+
+- **Named lens kept, against its own falsification criterion.** The in-vivo tally registered 2026-07-25 reached its 2026-09-01 deadline with zero recorded instances. With the null 2026-08-24 eos-test, the pre-registered consequence was "propose a v23 cut". The author overrode it and kept the field. This is a user-authority override: the null result stands and must not be cited as support for the lens. No tally file was ever created, so the instrument failed by not existing.
+
+### Unchanged
+
+- No behavior change.
+
 ## v22.7.0 — 2026-09-08
 
 ### Changed
