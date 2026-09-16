@@ -23,7 +23,7 @@ The kernel (`kernel/CLAUDE.md`) has strict modification rules:
 - **Measured delta (LOCKED, since v22.1)**: No kernel change ships without a result from `tools/eos-test` — dry-run cost estimate first, pre-registered hypothesis and criteria, both outcomes published in `docs/experiments/`.
 - **Compression prohibition (LOCKED)**: Never fold, merge, or compress named behaviors silently. Any restructure includes a behavior map showing the disposition of every named behavior (see `docs/v22-behavior-map.md` for the reference example).
 - **Section ordering**: USER MODEL before Identity before Rules is a reading/maintenance convention (the v20 "token ordering as mechanism" claim was refuted — see `docs/experiments/`). Keep the convention; don't cite it as a mechanism.
-- **Version bump**: Any approved kernel change bumps the version and gets a CHANGELOG entry.
+- **Version bump**: Any approved kernel change bumps the version and gets a CHANGELOG entry. A release is not done until every reader-facing surface is read back: README title and body, the GitHub About/description, and any skill-form snapshot of the kernel.
 
 ## Skill Standards
 
@@ -33,7 +33,7 @@ The kernel (`kernel/CLAUDE.md`) has strict modification rules:
 ---
 name: eos-your-skill-name
 version: "v1.0.0"
-kernel_compat: "v20.1.0"
+kernel_compat: "v22"
 description: "Trigger documentation. Include: what triggers it, what signals to look for, and what NOT to trigger on."
 ---
 ```
@@ -42,7 +42,6 @@ description: "Trigger documentation. Include: what triggers it, what signals to 
 
 Every skill should include:
 - **Trigger**: When the skill activates (explicit keywords, state transitions, metric thresholds)
-- **Autonomy**: Which tier (1/2/3) for each operation
 - **Steps**: Numbered procedure
 - **Failure Modes**: Table with Failure | Detection | Response columns
 - **Cross-References**: Which kernel rules and other skills it interacts with
@@ -64,8 +63,7 @@ Skill versions live in the YAML `version` field. Do not include versions in file
 
 ## Documentation
 
-- Rule docs (`docs/rules/`) supplement the kernel; they do not duplicate it
-- Concept docs (`docs/concepts/`) explain mechanics with examples
+- `docs/rules/` and `docs/concepts/` are v20/v21-era and banner-marked historical; do not extend them. Current behavior is documented in the kernel, the README, `hooks/README.md`, and CHANGELOG entries.
 - Keep docs concise: 40-80 lines per file
 - No emojis, no marketing language
 

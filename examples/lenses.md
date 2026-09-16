@@ -1,4 +1,4 @@
-# Lens registry — example (EOS v22.8.0)
+# Lens registry — example (introduced in EOS v22.8.0)
 
 Copy this file to `<state-dir>/lenses.md` (default `~/.claude/eos-state/lenses.md`)
 and edit it for the layers of work you actually do.

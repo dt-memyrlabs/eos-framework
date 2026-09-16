@@ -26,7 +26,7 @@ Small print, stated up front: n = 8 tasks, one run, Claude judging Claude. Direc
 
 ## What's in the kernel
 
-The kernel ([kernel/CLAUDE.md](kernel/CLAUDE.md), ~100 lines) contains:
+The kernel ([kernel/CLAUDE.md](kernel/CLAUDE.md), one file) contains:
 
 - **Two axioms.** No assumptions without falsification criteria; truth over compliance, appearance, and convention.
 - **USER MODEL** -- the load-bearing section. Prose, specific, maintained. The template tells you what to cover; the experiment tells you why prose.
@@ -35,15 +35,15 @@ The kernel ([kernel/CLAUDE.md](kernel/CLAUDE.md), ~100 lines) contains:
 
 | # | Rule | One line |
 |---|------|----------|
-| 1 | Goal Lock | The goal is the only fixed point; nothing starts without one. |
-| 2 | Grounding | Assumptions declared with falsification criteria; constraints classified; confidence derived from open-assumption count; numbers measured or labeled unmeasured -- never fabricated. |
+| 1 | Goal Lock — the picture gate | A goal sentence is not a goal. The model writes its own picture (end state, in, out, done); the user confirms the match; only then does it build. Three header states: `open` / `pictured` / `locked` (v22.9.0). A rule the hook keeps in front of the model, not a tool block. |
+| 2 | Grounding | Assumptions declared with falsification criteria; constraints classified; confidence derived from open-assumption count; numbers measured or labeled unmeasured -- never fabricated. Self-clarify first (v22.7.0): resolve ambiguity from the data before asking the user. |
 | 3 | Contradiction & Position Integrity | Flag contradictions immediately; positions move on argument, never on pressure. |
 | 4 | Regression Lock | Resolved is locked; re-opening requires new evidence. |
 | 5 | Output Integrity | Noun-swap test; header present. |
 
 - **Runtime header** -- reduced to facts: `[lens:name] [goal:open|pictured|locked] [assump:N] [conf:H/M/L] [pos:held/moved|basis]`. The lens names the layer of work and, since v22.8.0, selects a binding scope contract from `lenses.md` (evidence / done / scope / guard; see [examples/lenses.md](examples/lenses.md)); as a bare label it measured null on 2026-08-24 because nothing consumed its value, and the contract is unmeasured with a pre-registered criterion. `goal` is the picture gate (v22.9.0): `open` until the model has written its own picture of the end state, `pictured` while the user has not yet confirmed the match, `locked` after -- and the model builds only at `locked` -- a rule the hook keeps in front of it every prompt, not a tool block. The assumption count is countable, confidence is a stated mapping from that count, position is a fact. The old numeric dashboard fields (1-5 lens, sim-depth, CCI-G percentage) are gone: either the axis was retired or the number had no instrument behind it.
 - **Lessons** -- every user correction is written to `tasks/lessons.md` immediately and loaded at session start. As of v22.6.0 a distilled one-line-per-lesson file (`<state-dir>/lessons-distilled.md`) is also injected on every prompt in every project by `eos-hook.js` -- a 2026-08-24 measurement over 302 sessions found 6 of 8 mature lessons recurred after being written because per-repo lessons files are silos.
-- **Builder mode, state storage, workflow discipline** -- one short section each.
+- **State** -- two stores, split in v22.7.0: project state lives in your own project store (a notes vault or docs tool; Notion is one optional backend, not a requirement), and the injected state file carries reasoning-framework state only -- goal, lens, assumptions, positions, locks. **Builder mode** sits behind the picture gate. **Workflow discipline** -- one short section.
 
 ## Testing changes: the harness
 
@@ -57,7 +57,7 @@ The legacy 22 remain in [skills/](skills/) as **optional extensions** -- the ker
 
 - **[`skills/eos-feedback-loops/SKILL.md`](skills/eos-feedback-loops/SKILL.md)** -- feedback loops on the collaboration itself: rejection pattern mining (what you consistently reject reveals unstated constraints), a prediction ledger with accuracy review (does what the model predicts come true?), reversibility tagging, a countable correction ledger, and the invitation-over-extraction probe technique.
 
-Everything else was control machinery, platform-superseded, or generic -- the same verdict the experiment gave the kernel.
+Everything else was control machinery, platform-superseded, or generic -- the same verdict the experiment gave the kernel. As of v22.8.1 every legacy skill that reads or writes Notion carries a store note: Notion is optional, substitute your own project store.
 
 ## Quick start
 
@@ -67,13 +67,13 @@ cp kernel/CLAUDE.md ~/.claude/CLAUDE.md
 
 Then edit the USER MODEL section: replace the template block with 5-12 prose sentences about yourself, your methods, your environment, and your active projects. That edit is most of the value of this framework -- the experiment says so. Skills and hooks are optional; see below.
 
-Alternative: install EOS as an on-demand Claude Code skill instead of always-on system context. [skills/eos/SKILL.md](skills/eos/SKILL.md) is the kernel in skill form -- it activates when you say "EOS" and stays out of the way otherwise:
+Alternative: install EOS as an on-demand Claude Code skill instead of always-on system context. [skills/eos/SKILL.md](skills/eos/SKILL.md) is a **snapshot of kernel v22.6.0** in skill form -- it activates when you say "EOS" and stays out of the way otherwise. It predates the v22.7.0 store split and self-clarify gate, the v22.8.0 lens contracts, and the v22.9.0 picture gate; the kernel file is the current one.
 
 ```bash
 cp -r skills/eos ~/.claude/skills/eos
 ```
 
-Two entries under skills/ are in Claude Code's installable `SKILL.md` format: [skills/eos](skills/eos/SKILL.md) (the kernel) and [skills/eos-feedback-loops](skills/eos-feedback-loops/SKILL.md) (the one v22-native extension). The legacy category folders are plain reference documents, not installable skills.
+Two entries under skills/ are in Claude Code's installable `SKILL.md` format: [skills/eos](skills/eos/SKILL.md) (the v22.6.0 kernel snapshot) and [skills/eos-feedback-loops](skills/eos-feedback-loops/SKILL.md) (the one v22-native extension). The legacy category folders are plain reference documents, not installable skills.
 
 ```bash
 cp -r skills/eos-feedback-loops ~/.claude/skills/eos-feedback-loops
@@ -85,7 +85,7 @@ EOS ships one Node dispatcher for state persistence (four lifecycle events) and 
 
 | Hook | Event | Purpose |
 |------|-------|---------|
-| `eos-hook.js prompt` | UserPromptSubmit | Injects state + distilled lessons + v22 header mandates into model context on every prompt; parses optional `lens:` steering |
+| `eos-hook.js prompt` | UserPromptSubmit | Injects state, the picture-gate status, the active lens contract, distilled lessons and the header mandates on every prompt; parses `lens:` steering and `goal: confirmed` / `goal: open` directives |
 | `eos-hook.js session-start` | SessionStart | Injects state file content on session start / post-compaction |
 | `eos-hook.js pre-compact` | PreCompact | Backs up EOS state file before context compaction |
 | `eos-hook.js session-end` | SessionEnd | Final state backup on session close |
@@ -99,23 +99,27 @@ Note: Claude Code now ships native auto-memory and compaction-surviving summarie
 
 ```
 eos-framework/
-  kernel/CLAUDE.md          # The framework. ~100 lines.
+  kernel/CLAUDE.md          # The framework. One file, template USER MODEL.
+  CHANGELOG.md              # Every version, with the evidence or the override behind it
   docs/
-    experiments/            # Falsification tests: design, data, limitations
+    experiments/            # Falsification tests: design, data, limitations (2026-07-14, 2026-08-24)
     v22-behavior-map.md     # Every v21 behavior -> kept / retired / optional, with basis
-    architecture.md         # Background (v21-era; superseded where it conflicts with experiments/)
-    rules/                  # v21-era rule deep-dives (historical)
-    concepts/               # v21-era concept docs (historical)
-  skills/                   # 22 optional extension modules (untested individually)
-  hooks/                    # Claude Code lifecycle hooks
+    architecture.md, rules/, concepts/, installation.md, quick-start.md
+                            # v20/v21-era, banner-marked historical; Notion described there is optional
+  hooks/                    # eos-hook.js (one dispatcher, four lifecycle events) + three bash hooks
+  examples/lenses.md        # Lens contract registry to copy into your state dir
+  skills/eos-feedback-loops # The one v22-native skill (installable)
+  skills/eos                # Kernel snapshot at v22.6.0, in skill form (installable, behind the kernel file)
+  skills/<category>/        # 22 legacy modules, untested, kept as reference
+  tools/eos-test.*          # The measurement harness
   tools/validate-skills.sh
-  examples/
 ```
 
 ## Known issues
 
 - **The evidence is thin.** One experiment, 8 tasks, one model family generating and judging. It was enough to cut untested machinery; it is not enough to call anything proven. More runs, more domains, and a non-Claude judge would all strengthen or overturn it.
 - **Skills are unvalidated and all legacy.** None has been individually tested, every one declares a pre-v22 `kernel_compat`, and 14 of 22 reference machinery v22 retired (those carry an in-file `v22 status: legacy` notice — loading one may reintroduce retired behavior). `tools/validate-skills.sh` reports the current state. Treat them as a library of drafts; revalidate with the harness before promoting any to v22.
+- **`docs/installation.md` and `docs/quick-start.md` describe the v20 stack** (18 skills, numeric controls, Notion). They are banner-marked historical. Setup for the current kernel is the Quick start above plus [hooks/README.md](hooks/README.md).
 - **Native platform memory keeps moving.** Sections of this framework will keep becoming redundant as Claude Code absorbs persistence. That is fine. The durable core is the ruleset, not the plumbing.
 
 ## License
