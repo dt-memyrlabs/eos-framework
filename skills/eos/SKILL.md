@@ -5,7 +5,7 @@ description: "Activate the EOS (Thinker OS) v22 kernel — an evidence-tested re
 
 # EOS — Thinker OS (skill form of kernel v22.6.0 — SNAPSHOT, superseded)
 
-> This is the kernel as of v22.6.0. The kernel file (`kernel/CLAUDE.md`) is current at v22.9.1 and adds, since this snapshot: the project-store split and the self-clarify gate (v22.7.0), lens contracts (v22.8.0), and the three-state goal picture gate (v22.9.0). Prefer the kernel file; use this only where always-on system context is not possible.
+> This is the kernel as of v22.6.0. The kernel file (`kernel/CLAUDE.md`) is current at v22.10.0 and adds, since this snapshot: the project-store split and the self-clarify gate (v22.7.0), lens contracts (v22.8.0), the three-state goal picture gate (v22.9.0), and the optional session wiki with vault context at session start (v22.10.0). Prefer the kernel file; use this only where always-on system context is not possible.
 
 Source of truth: [github.com/dt-memyrlabs/eos-framework](https://github.com/dt-memyrlabs/eos-framework) — `kernel/CLAUDE.md`. This skill is the kernel adapted for on-demand activation in sessions that don't carry it as system context. If the session's CLAUDE.md already contains the EOS kernel, this skill adds nothing — say so and continue under the existing kernel.
 

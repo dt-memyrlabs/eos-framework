@@ -39,6 +39,10 @@ Directives, parsed before the model sees the prompt: `goal: confirmed` (also `co
 
 No tool is blocked by design. If you want tool-level enforcement, that belongs in Claude Code's own permission settings, not here.
 
+## Vault context (v22.10.0)
+
+Set `EOS_VAULT` to the directory of your project store. At session start only, the hook then injects where the session wiki is and which project pages exist. If `<vault>/wiki/project-map.json` maps the session's working directory to a project, it also injects that page's `## Where it stands` and `## Open threads` sections, each capped at 1,400 characters, with a reminder that the page is a record and not live state. Working directories listed under `cwd_exclude` in that file never get a project page — use it for automated agent sandboxes whose path happens to contain a project name. At session end it appends one line to `<vault>/wiki/raw/_pending.md` so the next ingest knows the session exists. The per-prompt injection is unchanged. With `EOS_VAULT` unset, nothing is injected and nothing is written. The wiki itself is built by [tools/wiki](../tools/wiki/README.md).
+
 ## Installation
 
 1. Copy the dispatcher to `~/.claude/scripts/` and the safety hooks to `~/.claude/hooks/`:
@@ -58,7 +62,7 @@ chmod +x ~/.claude/hooks/*.sh
 
 4. Verify: your next prompt should arrive with an `EOS RUNTIME v22` injection block.
 
-5. Optional: set `EOS_VAULT` in the environment Claude Code runs in, to the location or name of your project store. The prompt mandate then names it; unset, the mandate says "your project store".
+5. Optional: set `EOS_VAULT` in the environment Claude Code runs in, to the directory of your project store. The prompt mandate then names it; unset, the mandate says "your project store". Since v22.10.0 the session-start vault context also reads this path, so a bare name no longer works for that part (see "Vault context" above).
 
 ## How Hooks Work
 

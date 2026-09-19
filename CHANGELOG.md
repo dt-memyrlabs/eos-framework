@@ -2,6 +2,32 @@
 
 All notable changes to EOS are documented here.
 
+## v22.10.0 — 2026-09-19
+
+User-authority override: shipped on the author's directive, no `eos-test` result. Recorded as such; the assumption below stays open.
+
+### Added
+
+- **Session wiki** (`tools/wiki/`, `examples/wiki/`). An agent-written wiki inside the project store, after the LLM-wiki pattern (Karpathy gist 442a6bf5): raw layer, wiki layer, schema file, `index.md`, `log.md`, and three operations (ingest, query, lint).
+  - `digest-sessions.js` reads `~/.claude/projects/*/*.jsonl` and writes one digest per session: the user's words, Claude's words, one line per tool call, files edited, commits, push/deploy commands. Hook injections and tool output are dropped — in the author's data an 84.8 MB transcript held about 51,000 characters of conversation. Secrets are redacted by pattern; long unbroken strings are redacted unless they read like a file path. Digests are capped at 120,000 characters with three fallback levels, and the level is written in the digest header. The window is decided by the last message time, not the file's modified time: 106 of the author's transcripts had been re-touched on one day weeks after their last message.
+  - `workflow-session-pages.js` runs one small-model agent per session. Each reads one digest to the end and writes one page from a fixed template: request, work done, decisions, verification (verified vs claimed), corrections, open items, files and commits, limits.
+  - `build-index.js` builds `index.md`, per-project listings for the project-page agents, stub pages for sessions with no reply, a lint report (digest with no page, missing fields or headings, bad enum values, broken links, secret patterns) and the `log.md` entry.
+- **Vault context in the hook.** With `EOS_VAULT` set, SessionStart injects where the wiki is and, when `wiki/project-map.json` maps the working directory to a project, that page's state and open threads (1,400 characters each). SessionEnd appends the session to `wiki/raw/_pending.md`. Per-prompt injection is unchanged; with `EOS_VAULT` unset the hook does nothing new.
+  - `check-quotes.js` checks every quotation on every session page against the transcript and writes the result on the page. First build: of 510 quotations, 249 were the user's words, 105 were Claude's words, 37 were tool input or output, and 119 were found nowhere — the small model had put its own paraphrase in quotation marks.
+  - `workflow-project-pages.js` runs one agent per project for the current-state page, and verifier agents that check a sample of session pages against digest and transcript and fix them. First build, 10 pages: 3 accurate, 6 minor errors, 1 major (a long session with a cut-down digest: Claude's proposals recorded as decisions the user had locked, merge times wrong by hours).
+- **Hook output budget.** Found while testing the vault context in a real session: Claude Code replaces a hook output above roughly 10,000 characters with a 2 KB preview and a file path. The model then sees the start of the state line and nothing after it — no lens contract, no lessons, no mandates — and nothing reports the loss. A growing `lessons-distilled.md` or state file crosses that line silently. Three changes: the `state:` line no longer repeats `goal.picture` (the gate text prints it while it waits); SessionStart no longer carries the lessons (the first UserPromptSubmit delivers them moments later); and any injection over 9,500 characters now starts with an `EOS INJECTION OVER BUDGET` line, inside the part of the output that survives.
+- `wiki/project-map.json` holds the project values, the kinds, the working-directory-to-project map, `cwd_exclude` (automated agent sandboxes whose path contains a project name) and the transcript-folder-to-group map. The hook and the tools read it; nothing personal is in the code.
+- **Kernel:** one sentence in the State paragraph — read the project page before claiming anything about past work; cite the session page; treat it as a record to verify, not as live state.
+
+### Open assumption
+
+- A session that starts with its project page makes fewer wrong claims about past work. Falsified if, over the next 10 project sessions, the user corrects a claim the project page already had right.
+
+### Known limits
+
+- Session pages are written by a small model from a cut-down digest. They are a record of what the transcript says, including what Claude claimed; the template separates "verified" from "claimed" but cannot check either.
+- Redaction is pattern-based. Run the lint secret scan after every ingest and before sharing a vault.
+
 ## v22.9.1 — 2026-09-15
 
 ### Removed

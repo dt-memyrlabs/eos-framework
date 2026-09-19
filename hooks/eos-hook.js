@@ -22,7 +22,8 @@ const EVENT = process.argv[2] || 'prompt';
 // .claude/settings.json hook commands for per-project state isolation.
 const DIR = process.env.EOS_STATE_DIR || path.join(os.homedir(), '.claude', 'eos-state');
 const STATE = path.join(DIR, 'current-state.json');
-// EOS_VAULT (v22.7.0): optional location or name of the user's project store, named in the prompt mandate.
+// EOS_VAULT (v22.7.0): optional location of the user's project store, named in the prompt mandate.
+// Since v22.10.0 it must be a directory path for the session wiki context to load; unset = none injected.
 const VAULT = process.env.EOS_VAULT || '';
 const BACKUPS = path.join(DIR, 'backups');
 
@@ -38,6 +39,50 @@ function backup(prefix, sessionId, keep) {
   return true;
 }
 function out(obj) { process.stdout.write(JSON.stringify(obj)); }
+
+// Vault context (v22.10.0). The project store (EOS_VAULT, a notes vault) can hold an
+// agent-written wiki (wiki/SCHEMA.md). Session start injects where the wiki is, which
+// project pages exist, and — when the cwd maps to a project — that page's current
+// state and open threads. Session start only: per-prompt bytes stay framework-only.
+// cwd -> project page, from <vault>/wiki/project-map.json ({"cwd": {"<project>": ["<substring>", ...]}}).
+// First project with a substring found in the lower-cased cwd wins. No map = no project match.
+function projectOf(cwd) {
+  try {
+    const cfg = JSON.parse(fs.readFileSync(path.join(VAULT, 'wiki', 'project-map.json'), 'utf8'));
+    const map = cfg.cwd || {};
+    const c = String(cwd || '').toLowerCase();
+    // cwd_exclude: working directories that never get a project page (for example automated agent sandboxes).
+    if ((cfg.cwd_exclude || []).some(s => c.includes(String(s).toLowerCase()))) return null;
+    for (const [proj, subs] of Object.entries(map)) if ((subs || []).some(s => c.includes(String(s).toLowerCase()))) return proj;
+  } catch {}
+  return null;
+}
+function sectionOf(text, heading, max) {
+  const t = text.replace(/\r/g, '');
+  const i = t.indexOf('\n' + heading + '\n'); if (i < 0) return '';
+  const rest = t.slice(i + heading.length + 2); const j = rest.search(/\n## /);
+  const body = (j < 0 ? rest : rest.slice(0, j)).trim();
+  return body.length > max ? body.slice(0, max) + ' […cut; read the page]' : body;
+}
+function vaultContext(cwd) {
+  if (!VAULT) return '';
+  try {
+    const dir = path.join(VAULT, 'wiki', 'projects');
+    if (!fs.existsSync(dir)) return `VAULT: ${VAULT} is the project store (map: index.md). No wiki project pages found.`;
+    const pages = fs.readdirSync(dir).filter(f => f.endsWith('.md'));
+    const lines = [`VAULT CONTEXT — ${VAULT} is the project store. Session wiki: wiki/index.md (catalog), wiki/SCHEMA.md (rules), wiki/projects/ (current state per project), wiki/sessions/ (one page per past session). Read the project page before you claim anything about project state or past work; it outranks memory. Project pages: ${pages.map(f => f.replace(/\.md$/, '')).join(', ') || '(none)'}.`];
+    const proj = projectOf(cwd);
+    if (proj && pages.includes(proj + '.md')) {
+      const text = fs.readFileSync(path.join(dir, proj + '.md'), 'utf8');
+      const upd = (text.match(/^updated:\s*(.+)$/m) || [])[1] || 'unknown';
+      const stands = sectionOf(text, '## Where it stands', 1400), open = sectionOf(text, '## Open threads', 1400);
+      lines.push(`THIS SESSION'S PROJECT (from cwd): ${proj} — wiki/projects/${proj}.md, built from sessions up to ${upd}. It is a record of past sessions, not live state: verify against the code or system before acting on it.`);
+      if (stands) lines.push('WHERE IT STANDS:\n' + stands);
+      if (open) lines.push('OPEN THREADS:\n' + open);
+    }
+    return lines.join('\n');
+  } catch { return `VAULT: ${VAULT} is the project store. (wiki context unreadable)`; }
+}
 
 // Picture gate (v22.9.0). goal.state is one of: open (no picture), pictured (the
 // model has written its picture — end state, in, out, done — and is waiting for
@@ -77,6 +122,11 @@ process.stdin.on('end', () => {
 
   if (EVENT === 'session-end') {
     backup('final', sid, 10);
+    // Queue the session for wiki ingest (v22.10.0). One line; the ingest run clears it.
+    try {
+      const q = path.join(VAULT, 'wiki', 'raw', '_pending.md');
+      if (VAULT && fs.existsSync(path.dirname(q))) fs.appendFileSync(q, `- ${new Date().toISOString()} | ${sid} | ${String(input.cwd || '').replace(/\\/g, '/')}\n`);
+    } catch {}
     out({ continue: true });
     return;
   }
@@ -141,7 +191,10 @@ process.stdin.on('end', () => {
   const lines = [];
   lines.push(`EOS RUNTIME v22 (deterministic ${EVENT === 'prompt' ? 'per-prompt' : 'session-start'} injection):`);
   if (state) {
-    lines.push(`state: ${JSON.stringify(state)}`);
+    // goal.picture is left out of the state line: gateText() prints it while the gate waits, and once
+    // locked it is history. It stays in the state file.
+    const slim = Object.assign({}, state, state.goal && typeof state.goal === 'object' ? { goal: Object.assign({}, state.goal, { picture: undefined }) } : {});
+    lines.push(`state: ${JSON.stringify(slim)}`);
     if (state.lens) lines.push(`lens: ${state.lens}${state.lens_locked_by_user ? ' [USER-LOCKED — hold until the user sends "lens: off" or steers a new value]' : ' [free choice]'}`);
   } else {
     lines.push(`state: none — fresh session. Initialize ${STATE} on first state-change event.`);
@@ -178,17 +231,26 @@ process.stdin.on('end', () => {
   // Distilled lessons: injected every prompt in every project. Fix for the
   // 2026-08-24 recurrence measurement — per-repo tasks/lessons.md silos meant
   // project sessions never saw the global lessons (6/8 mature lessons recurred).
-  try {
+  // Session start skips the lessons: the first UserPromptSubmit carries them moments later, and the
+  // two together with the vault context would cross the harness limit (see BUDGET below).
+  if (EVENT === 'prompt') try {
     const lessons = fs.readFileSync(path.join(DIR, 'lessons-distilled.md'), 'utf8')
       .split(/\r?\n/).filter(l => l.startsWith('- ')).join('\n');
     if (lessons) lines.push('LESSONS (standing, apply to every response):\n' + lessons);
   } catch {}
+  if (EVENT === 'session-start') { const vc = vaultContext(input.cwd); if (vc) lines.push(vc); }
   lines.push('MANDATES: begin the response with the v22 runtime header — [lens:name] [goal:open|pictured|locked] [assump:N] [conf:H/M/L] [pos:held/moved|basis] — facts only, per Rule 2. goal is the picture-gate state, not whether a goal sentence exists. Default to brief — expand only when asked. Resolve ambiguity from the data before asking the user — a question the files can answer is a defect. Project state lives in ' + (VAULT ? 'the project store at ' + VAULT : 'your project store (notes vault or docs tool)') + ' — write it there on a lock or a close; this state file carries reasoning-framework state only: goal, lens, assumptions, positions, regression locks, framework locks. On any framework state-change (goal, lens, assumption open/close, position, framework lock) update the state file via the Write tool — max one write per response. Lens steering: "lens: <name>" anywhere in a prompt; "lens: off" to unlock.');
 
+  // BUDGET (v22.10.0): Claude Code replaces a hook output above roughly 10,000 characters with a 2 KB
+  // preview and a file path, so everything after the state line silently never reaches the model
+  // (measured 2026-09-19: 10,035 chars was cut). Fail loudly, at the top, where the preview still shows it.
+  const BUDGET = 9500;
+  let text = lines.join('\n');
+  if (text.length > BUDGET) text = `EOS INJECTION OVER BUDGET: ${text.length} characters, limit about 10,000. The harness shows the model only the first 2 KB of this block, so the lens contract, lessons and mandates below are NOT in context. Tell the user now. Fix: shorten ${path.join(DIR, 'lessons-distilled.md')} or ${STATE}.\n` + text;
   out({
     hookSpecificOutput: {
       hookEventName: EVENT === 'prompt' ? 'UserPromptSubmit' : 'SessionStart',
-      additionalContext: lines.join('\n')
+      additionalContext: text
     },
     suppressOutput: true
   });
