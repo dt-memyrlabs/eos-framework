@@ -2,6 +2,45 @@
 
 All notable changes to EOS are documented here.
 
+## v22.11.0 — 2026-09-20
+
+User-authority override, no `eos-test` result. The sixth such release since v22.5.0, counted from the kernel changelog. It adds to the kernel while the v23 cut, which shrinks it, is parked; that conflict was put to the user before the go.
+
+### Added
+
+- **Small questions (Rule 2).** On every ask the model splits the ask into the small exact questions the answer depends on, answers each, and marks it `counted`, `read` or `guessed`. A guess the answer rests on counts as an open assumption. The questions show on the page for a recommendation, a "done" claim or a diagnosis. On pushback the model redoes the one question the point changes. The picture gate (Rule 1) does this for the goal; this does it for the claims inside the answer.
+- Source: the reasoning habits in the `jev` skill (github.com/dbreunig/building-with-jev-skill, `skills/jev/SKILL.md`), a guide for programs that call TypeSafe's Jev model. Restated in EOS terms. None of the product usage guidance was taken.
+
+### Why
+
+In one session the user corrected two of the model's claims that were aimed at the right thing and false: a claim that a name was unknown, made after searching one folder, and a "user-locked" lens value the user never chose. A picture of the goal catches a wrong target. It does not catch a false claim inside a well-aimed answer.
+
+### Open assumption
+
+The step lowers the number of the model's factual claims the user has to correct. Baseline: 2 in one session, a thin baseline. Falsified if the per-session count does not fall below 2 over the next 10 sessions. Nothing enforces the step. The only check is that the questions show on the page.
+
+## v22.10.2 — 2026-09-20
+
+Two rules for agents that write documentation, and the measurement that produced them. No kernel rule changed; Rule 6 (v22.10.1) already covers the principle.
+
+### Added to `examples/wiki/SCHEMA.md`
+
+- **An environment notice is not a cause.** A transcript opens with setup noise: connectors that failed, expired tokens, startup warnings. A small model writing a summary reaches for the nearest explanation and promotes that notice to the reason the run failed. On one page the entire failure narrative was invented this way; the checker grepped the transcript and found the string only in an unrelated tool listing. If the record does not say why something stopped, the page must say that.
+- **A turn is not a person.** On a scheduled task or an automated agent run, the "human" turn is a machine: a wake payload, a cron trigger, a comment posted by another agent. Pages read that as the user speaking, so an agent's own unilateral action — merging a PR, closing an issue — was written up as a decision the user made. Found in 11 checker findings across 8 pages. The rule and the three template sections that invited it are corrected.
+- `tools/wiki/tally-verify.js`: counts every fact-check result from the workflow journals and writes the wiki log entry, so the numbers in the log are read from the run rather than typed in.
+
+### Measured: every session page in one vault, checked by a stronger model
+
+166 of 166 session pages, one checker per page, against digest and transcript. First check of each page:
+
+- **29 accurate, 87 minor errors, 50 major errors.** "Major" means a reader would be misled about what happened, what was decided, or what is open.
+- 240 of 2555 numbers, ids and times were wrong or unsupported.
+- 264 of 2142 claims were unsupported; 192 important facts were missing; 135 items could be neither confirmed nor refuted.
+- 163 pages were corrected by their checker.
+- 6 pages were checked a second time, after the first checker had corrected them. That pass found 2 accurate, 3 minor, 1 major, and still turned up 5 wrong numbers, 10 unsupported claims and 6 missing facts. **One checker pass does not make a page clean.**
+
+Read that as the cost of the pattern, not as a reason to skip it: the pages are the record, and before the check they were wrong in ways no reader could see. Budget a checker per page, not a sample.
+
 ## v22.10.1 — 2026-09-20
 
 User-authority override, no `eos-test` result. The user's directive after the v22.10.0 build, paraphrased: never lie while documenting in the vault, make up no numbers, and be as honest as the model expects the user to be.

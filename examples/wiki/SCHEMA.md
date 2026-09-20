@@ -26,7 +26,9 @@ This file is the rulebook for every agent that writes in `<vault>/wiki/`. Copy i
 7. **Links.** Obsidian wikilinks with the full vault path and a label: `[[wiki/projects/product-a|Product A]]`. Link the project page and the raw digest from every session page. Link another session only if the digest names it.
 8. **No framework header.** Pages are documents. Do not put any `[lens:...]` runtime header, greeting or sign-off in a file.
 9. **Numbers, ids and times.** Every count, amount, percentage, date, clock time, duration, version, commit hash, PR, issue, work-order or run id on a page must appear in the digest. Copy it; never round it, convert it, or work it out. If you are not sure, leave it out. A wrong number in documentation is a lie. Quotation marks hold the exact words of the person named; if you are paraphrasing, do not use quotation marks. Words Claude wrote are never attributed to the user. A proposal is not a decision.
-10. **Cut digests.** If the digest header says `digest_level` is anything other than `full`, say so in the page under "Limits of this page".
+10. **An environment notice is not a cause.** A transcript carries setup noise: lists of MCP servers that failed to connect, expired tokens, missing plugins, warnings about the machine. That text says something was broken somewhere, not that it broke this session's work. Never write it as the reason a run stopped or a task failed unless the record shows the session actually called that thing and got that error. If the record does not say why something stopped, write "The record does not say why it stopped."
+11. **A turn is not a person.** On a scheduled task or an automated agent run, the "HUMAN" turn in the digest is usually a machine: a wake payload, a cron trigger, a comment posted by another agent. Check whose words they are before you attribute anything. Claude reasoning aloud about why it acted is not a decision, and a policy Claude quotes from an issue is not a decision made here. If the session has no turn the user actually typed, write "No decision by the user: this session had no turn from them, only <what triggered it>." in "Decisions and locks", and "None recorded." in "Corrections from the user".
+12. **Cut digests.** If the digest header says `digest_level` is anything other than `full`, say so in the page under "Limits of this page".
 
 ## Project values
 
@@ -70,19 +72,19 @@ entities: [<work order, PR, issue ids, file or feature names that matter, max 12
 Two to four sentences. What the session was for, what came out of it, and how it ended.
 
 ## What the user asked for
-The request or requests, in order. For a scheduled task or an automated agent run, say what triggered it and what the task was.
+The request or requests, in order. For a scheduled task or an automated agent run, do not write it as the user asking: name the trigger (the schedule, the wake payload, the agent that posted the comment) and what the task text said.
 
 ## What was done
 The work, in order, as short bullets. Name files, commands, tools and systems. Say what changed in the world: files, database, deploys, settings.
 
 ## Decisions and locks
-Decisions made in this session and who made them. Quote the user. If none: `None recorded.`
+Decisions made in this session and who made them. Quote the user. A decision needs a turn the user actually typed: on a scheduled or automated run, say so and name what the agent did on its own authority instead. If none: `None recorded.`
 
 ## Verification
 What was actually proven, and how (test run, read-back, browser check, query). Separate "verified" from "claimed". If nothing was verified, say so.
 
 ## Corrections from the user
-Each time the user corrected Claude: what was wrong, what they said. If none: `None recorded.`
+Each time the user corrected Claude: what was wrong, what they said. Only from turns he typed — never from a wake payload or another agent's comment. If none: `None recorded.`
 
 ## Open at the end
 What was left unfinished, blocked, or waiting on a decision. If the session ended mid-task, say where it stopped.

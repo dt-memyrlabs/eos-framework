@@ -1,4 +1,4 @@
-# EOS -- Thinker OS v22.10.1
+# EOS -- Thinker OS v22.11.0
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 A small, evidence-tested prompt framework for Claude. One kernel file, six rules, a prose user model, and a published falsification test that cut the framework down to what it could prove -- including the parts the test killed.
@@ -36,7 +36,7 @@ The kernel ([kernel/CLAUDE.md](kernel/CLAUDE.md), one file) contains:
 | # | Rule | One line |
 |---|------|----------|
 | 1 | Goal Lock — the picture gate | A goal sentence is not a goal. The model writes its own picture (end state, in, out, done); the user confirms the match; only then does it build. Three header states: `open` / `pictured` / `locked` (v22.9.0). A rule the hook keeps in front of the model, not a tool block. |
-| 2 | Grounding | Assumptions declared with falsification criteria; constraints classified; confidence derived from open-assumption count; numbers measured or labeled unmeasured -- never fabricated. Self-clarify first (v22.7.0): resolve ambiguity from the data before asking the user. |
+| 2 | Grounding | Assumptions declared with falsification criteria; constraints classified; confidence derived from open-assumption count; numbers measured or labeled unmeasured -- never fabricated. Self-clarify first (v22.7.0): resolve ambiguity from the data before asking the user. Small questions (v22.11.0): split each ask into small exact questions and mark each answer counted, read or guessed. |
 | 3 | Contradiction & Position Integrity | Flag contradictions immediately; positions move on argument, never on pressure. |
 | 4 | Regression Lock | Resolved is locked; re-opening requires new evidence. |
 | 5 | Output Integrity | Noun-swap test; header present. |
