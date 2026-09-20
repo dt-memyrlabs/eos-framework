@@ -2,6 +2,30 @@
 
 All notable changes to EOS are documented here.
 
+## v22.10.1 — 2026-09-20
+
+User-authority override, no `eos-test` result. The user's directive after the v22.10.0 build, paraphrased: never lie while documenting in the vault, make up no numbers, and be as honest as the model expects the user to be.
+
+### Added
+
+- **Rule 6, Record Integrity (HARD GATE).** Numbers are measured in the session and say how, or carry `estimate` / `unmeasured` in the same sentence. Quotation marks hold exact words. What an agent writes on the model's behalf is the model's record: checked, or labelled unchecked with the checked share as a count. A wrong record is corrected where it stands and says so; the model's own wrong numbers go first in its response.
+- `tools/wiki/workflow-verify-pages.js`: one fact-checker per session page. Every number, id, time, quotation and decision is traced to the digest or the transcript, or removed. The checker writes what it checked, as counts, on the page.
+- `examples/wiki/SCHEMA.md`: a numbers rule for every writing agent — copy the figure from the source; never round, convert or work it out.
+- `cwd_exclude` in `wiki/project-map.json`: working directories that never get a project page injected (an automated agent sandbox whose path contains a product name).
+- The hook carries a project page's notice line (a `> **...` line under the page title) into the session-start injection, cut to 400 characters. A page rebuilt from corrected sources can say so where the next session will read it.
+
+### Measured — what a fact-check of the author's own wiki found
+
+- 26 of 167 session pages were checked by a stronger model against digest and transcript. First pass on the 16 long-session pages: 0 accurate, 5 minor errors, 11 major. 105 of 536 numbers, ids and times were wrong or unsupported; 66 of 373 claims unsupported; 33 important facts missing.
+- Six of those pages were then checked a second time, after the first checker had corrected them. That pass still found 5 wrong numbers, 10 unsupported claims and 6 missing facts. One checker pass does not make a page clean.
+- A script check of every quotation: of 569 quotations, 312 were the user's words, 141 were the model's own words, 41 were tool input or output, and 75 were found nowhere in the transcript.
+
+### Corrected — what triggered the rule
+
+- **The hook comment in v22.10.0 said "measured 2026-09-19: 10,035 chars was cut". That was not a measurement.** It was the harness label "9.8KB" multiplied by 1,024. What was observed: a 9,126-character injection reached the model whole; injections the harness labelled "9.8KB" and "9.9KB" were replaced by a 2 KB preview. The exact limit is unmeasured. The v22.10.0 entry below says "above roughly 10,000 characters"; read that as an inference. The budget constant moves from 9,500 to 9,000, below the largest size seen to pass.
+- In the author's vault the model wrote "22 pages come from long or cut-down digests" without counting. The count was 19.
+- The v22.10.0 session pages, written by a small model, carried invented quotations, clock times and one run id.
+
 ## v22.10.0 — 2026-09-19
 
 User-authority override: shipped on the author's directive, no `eos-test` result. Recorded as such; the assumption below stays open.
@@ -15,7 +39,7 @@ User-authority override: shipped on the author's directive, no `eos-test` result
 - **Vault context in the hook.** With `EOS_VAULT` set, SessionStart injects where the wiki is and, when `wiki/project-map.json` maps the working directory to a project, that page's state and open threads (1,400 characters each). SessionEnd appends the session to `wiki/raw/_pending.md`. Per-prompt injection is unchanged; with `EOS_VAULT` unset the hook does nothing new.
   - `check-quotes.js` checks every quotation on every session page against the transcript and writes the result on the page. First build: of 510 quotations, 249 were the user's words, 105 were Claude's words, 37 were tool input or output, and 119 were found nowhere — the small model had put its own paraphrase in quotation marks.
   - `workflow-project-pages.js` runs one agent per project for the current-state page, and verifier agents that check a sample of session pages against digest and transcript and fix them. First build, 10 pages: 3 accurate, 6 minor errors, 1 major (a long session with a cut-down digest: Claude's proposals recorded as decisions the user had locked, merge times wrong by hours).
-- **Hook output budget.** Found while testing the vault context in a real session: Claude Code replaces a hook output above roughly 10,000 characters with a 2 KB preview and a file path. The model then sees the start of the state line and nothing after it — no lens contract, no lessons, no mandates — and nothing reports the loss. A growing `lessons-distilled.md` or state file crosses that line silently. Three changes: the `state:` line no longer repeats `goal.picture` (the gate text prints it while it waits); SessionStart no longer carries the lessons (the first UserPromptSubmit delivers them moments later); and any injection over 9,500 characters now starts with an `EOS INJECTION OVER BUDGET` line, inside the part of the output that survives.
+- **Hook output budget.** Found while testing the vault context in a real session: Claude Code replaces a large hook output with a 2 KB preview and a file path. (Corrected in v22.10.1: this entry first said "above roughly 10,000 characters". That figure was an inference, not a measurement; see the v22.10.1 entry.) The model then sees the start of the state line and nothing after it — no lens contract, no lessons, no mandates — and nothing reports the loss. A growing `lessons-distilled.md` or state file crosses that line silently. Three changes: the `state:` line no longer repeats `goal.picture` (the gate text prints it while it waits); SessionStart no longer carries the lessons (the first UserPromptSubmit delivers them moments later); and any injection over the budget (9,500 characters in v22.10.0, 9,000 since v22.10.1) now starts with an `EOS INJECTION OVER BUDGET` line, inside the part of the output that survives.
 - `wiki/project-map.json` holds the project values, the kinds, the working-directory-to-project map, `cwd_exclude` (automated agent sandboxes whose path contains a project name) and the transcript-folder-to-group map. The hook and the tools read it; nothing personal is in the code.
 - **Kernel:** one sentence in the State paragraph — read the project page before claiming anything about past work; cite the session page; treat it as a record to verify, not as live state.
 

@@ -25,7 +25,8 @@ This file is the rulebook for every agent that writes in `<vault>/wiki/`. Copy i
 6. **Names.** List your product, company and system names here, spelled the way you want them, so agents do not invent variants.
 7. **Links.** Obsidian wikilinks with the full vault path and a label: `[[wiki/projects/product-a|Product A]]`. Link the project page and the raw digest from every session page. Link another session only if the digest names it.
 8. **No framework header.** Pages are documents. Do not put any `[lens:...]` runtime header, greeting or sign-off in a file.
-9. **Cut digests.** If the digest header says `digest_level` is anything other than `full`, say so in the page under "Limits of this page".
+9. **Numbers, ids and times.** Every count, amount, percentage, date, clock time, duration, version, commit hash, PR, issue, work-order or run id on a page must appear in the digest. Copy it; never round it, convert it, or work it out. If you are not sure, leave it out. A wrong number in documentation is a lie. Quotation marks hold the exact words of the person named; if you are paraphrasing, do not use quotation marks. Words Claude wrote are never attributed to the user. A proposal is not a decision.
+10. **Cut digests.** If the digest header says `digest_level` is anything other than `full`, say so in the page under "Limits of this page".
 
 ## Project values
 

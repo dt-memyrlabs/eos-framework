@@ -1,7 +1,7 @@
-# EOS -- Thinker OS v22.10.0
+# EOS -- Thinker OS v22.10.1
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-A small, evidence-tested prompt framework for Claude. One kernel file, five rules, a prose user model, and a published falsification test that cut the framework down to what it could prove -- including the parts the test killed.
+A small, evidence-tested prompt framework for Claude. One kernel file, six rules, a prose user model, and a published falsification test that cut the framework down to what it could prove -- including the parts the test killed.
 
 ---
 
@@ -31,7 +31,7 @@ The kernel ([kernel/CLAUDE.md](kernel/CLAUDE.md), one file) contains:
 - **Two axioms.** No assumptions without falsification criteria; truth over compliance, appearance, and convention.
 - **USER MODEL** -- the load-bearing section. Prose, specific, maintained. The template tells you what to cover; the experiment tells you why prose.
 - **Identity** -- reasoning partner stance, a 4-question truth gate on every response, plain language, an STE output gate (ASD-STE100 writing rules, added v22.5.0 by user-authority override; measured 2026-08-24 and scoped in v22.6.0 to technical/instructional output only), and hard bans on consultantspeak, padding, flattery, and hedging.
-- **Five rules:**
+- **Six rules:**
 
 | # | Rule | One line |
 |---|------|----------|
@@ -40,6 +40,7 @@ The kernel ([kernel/CLAUDE.md](kernel/CLAUDE.md), one file) contains:
 | 3 | Contradiction & Position Integrity | Flag contradictions immediately; positions move on argument, never on pressure. |
 | 4 | Regression Lock | Resolved is locked; re-opening requires new evidence. |
 | 5 | Output Integrity | Noun-swap test; header present. |
+| 6 | Record Integrity | Documentation is testimony. A number is measured this session and says how, or it is labelled estimate or unmeasured. Quotation marks hold exact words. What an agent writes is the model's record. Wrong records are corrected in place, out loud. Added v22.10.1 after the model wrote two unmeasured figures into its own docs. |
 
 - **Runtime header** -- reduced to facts: `[lens:name] [goal:open|pictured|locked] [assump:N] [conf:H/M/L] [pos:held/moved|basis]`. The lens names the layer of work and, since v22.8.0, selects a binding scope contract from `lenses.md` (evidence / done / scope / guard; see [examples/lenses.md](examples/lenses.md)); as a bare label it measured null on 2026-08-24 because nothing consumed its value, and the contract is unmeasured with a pre-registered criterion. `goal` is the picture gate (v22.9.0): `open` until the model has written its own picture of the end state, `pictured` while the user has not yet confirmed the match, `locked` after -- and the model builds only at `locked` -- a rule the hook keeps in front of it every prompt, not a tool block. The assumption count is countable, confidence is a stated mapping from that count, position is a fact. The old numeric dashboard fields (1-5 lens, sim-depth, CCI-G percentage) are gone: either the axis was retired or the number had no instrument behind it.
 - **Lessons** -- every user correction is written to `tasks/lessons.md` immediately and loaded at session start. As of v22.6.0 a distilled one-line-per-lesson file (`<state-dir>/lessons-distilled.md`) is also injected on every prompt in every project by `eos-hook.js` -- a 2026-08-24 measurement over 302 sessions found 6 of 8 mature lessons recurred after being written because per-repo lessons files are silos.

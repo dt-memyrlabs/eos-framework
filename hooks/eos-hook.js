@@ -22,9 +22,6 @@ const EVENT = process.argv[2] || 'prompt';
 // .claude/settings.json hook commands for per-project state isolation.
 const DIR = process.env.EOS_STATE_DIR || path.join(os.homedir(), '.claude', 'eos-state');
 const STATE = path.join(DIR, 'current-state.json');
-// EOS_VAULT (v22.7.0): optional location of the user's project store, named in the prompt mandate.
-// Since v22.10.0 it must be a directory path for the session wiki context to load; unset = none injected.
-const VAULT = process.env.EOS_VAULT || '';
 const BACKUPS = path.join(DIR, 'backups');
 
 function readState() { try { return JSON.parse(fs.readFileSync(STATE, 'utf8')); } catch { return null; } }
@@ -40,20 +37,26 @@ function backup(prefix, sessionId, keep) {
 }
 function out(obj) { process.stdout.write(JSON.stringify(obj)); }
 
-// Vault context (v22.10.0). The project store (EOS_VAULT, a notes vault) can hold an
-// agent-written wiki (wiki/SCHEMA.md). Session start injects where the wiki is, which
-// project pages exist, and — when the cwd maps to a project — that page's current
-// state and open threads. Session start only: per-prompt bytes stay framework-only.
+// Vault context (v22.10.0). The project store can hold an agent-written session wiki
+// (wiki/SCHEMA.md). Session start injects where the wiki is, which project pages exist,
+// and — when the cwd maps to a project — that page's notice, current state and open
+// threads. Session start only: per-prompt bytes stay framework-only.
+// EOS_VAULT (v22.7.0): the directory of the user's project store, named in the prompt mandate.
+// Unset = no vault context is injected and nothing is written.
+const VAULT = process.env.EOS_VAULT || '';
 // cwd -> project page, from <vault>/wiki/project-map.json ({"cwd": {"<project>": ["<substring>", ...]}}).
 // First project with a substring found in the lower-cased cwd wins. No map = no project match.
 function projectOf(cwd) {
   try {
     const cfg = JSON.parse(fs.readFileSync(path.join(VAULT, 'wiki', 'project-map.json'), 'utf8'));
     const map = cfg.cwd || {};
-    const c = String(cwd || '').toLowerCase();
+    // Backslashes and forward slashes are the same separator here, so a pattern written either
+    // way matches either kind of path.
+    const norm = s => String(s || '').toLowerCase().split('\\').join('/');
+    const c = norm(cwd);
     // cwd_exclude: working directories that never get a project page (for example automated agent sandboxes).
-    if ((cfg.cwd_exclude || []).some(s => c.includes(String(s).toLowerCase()))) return null;
-    for (const [proj, subs] of Object.entries(map)) if ((subs || []).some(s => c.includes(String(s).toLowerCase()))) return proj;
+    if ((cfg.cwd_exclude || []).some(s => c.includes(norm(s)))) return null;
+    for (const [proj, subs] of Object.entries(map)) if ((subs || []).some(s => c.includes(norm(s)))) return proj;
   } catch {}
   return null;
 }
@@ -77,6 +80,9 @@ function vaultContext(cwd) {
       const upd = (text.match(/^updated:\s*(.+)$/m) || [])[1] || 'unknown';
       const stands = sectionOf(text, '## Where it stands', 1400), open = sectionOf(text, '## Open threads', 1400);
       lines.push(`THIS SESSION'S PROJECT (from cwd): ${proj} — wiki/projects/${proj}.md, built from sessions up to ${upd}. It is a record of past sessions, not live state: verify against the code or system before acting on it.`);
+      // A notice line right under the page title ("> **...") travels with the injection, cut to 400 characters.
+      const notice = (text.replace(/\r/g, '').match(/\n# [^\n]*\n\n(> \*\*[^\n]*)/) || [])[1];
+      if (notice) lines.push('PAGE NOTICE: ' + (notice.length > 400 ? notice.slice(0, 400) + ' […]' : notice));
       if (stands) lines.push('WHERE IT STANDS:\n' + stands);
       if (open) lines.push('OPEN THREADS:\n' + open);
     }
@@ -187,13 +193,15 @@ process.stdin.on('end', () => {
   }
   const goal = normalizeGoal(state);
 
-
   const lines = [];
   lines.push(`EOS RUNTIME v22 (deterministic ${EVENT === 'prompt' ? 'per-prompt' : 'session-start'} injection):`);
   if (state) {
-    // goal.picture is left out of the state line: gateText() prints it while the gate waits, and once
-    // locked it is history. It stays in the state file.
-    const slim = Object.assign({}, state, state.goal && typeof state.goal === 'object' ? { goal: Object.assign({}, state.goal, { picture: undefined }) } : {});
+    // History is left out of the state line; it stays in the state file. goal.picture and
+    // goal.confirmed are printed or implied by gateText(); parked_goal and closed_assumptions
+    // are pointers to the project store. Every byte here is paid on every prompt.
+    const slim = Object.assign({}, state, state.goal && typeof state.goal === 'object'
+      ? { goal: Object.assign({}, state.goal, { picture: undefined, confirmed: undefined }) } : {});
+    delete slim.parked_goal; delete slim.closed_assumptions;
     lines.push(`state: ${JSON.stringify(slim)}`);
     if (state.lens) lines.push(`lens: ${state.lens}${state.lens_locked_by_user ? ' [USER-LOCKED — hold until the user sends "lens: off" or steers a new value]' : ' [free choice]'}`);
   } else {
@@ -241,12 +249,15 @@ process.stdin.on('end', () => {
   if (EVENT === 'session-start') { const vc = vaultContext(input.cwd); if (vc) lines.push(vc); }
   lines.push('MANDATES: begin the response with the v22 runtime header — [lens:name] [goal:open|pictured|locked] [assump:N] [conf:H/M/L] [pos:held/moved|basis] — facts only, per Rule 2. goal is the picture-gate state, not whether a goal sentence exists. Default to brief — expand only when asked. Resolve ambiguity from the data before asking the user — a question the files can answer is a defect. Project state lives in ' + (VAULT ? 'the project store at ' + VAULT : 'your project store (notes vault or docs tool)') + ' — write it there on a lock or a close; this state file carries reasoning-framework state only: goal, lens, assumptions, positions, regression locks, framework locks. On any framework state-change (goal, lens, assumption open/close, position, framework lock) update the state file via the Write tool — max one write per response. Lens steering: "lens: <name>" anywhere in a prompt; "lens: off" to unlock.');
 
-  // BUDGET (v22.10.0): Claude Code replaces a hook output above roughly 10,000 characters with a 2 KB
-  // preview and a file path, so everything after the state line silently never reaches the model
-  // (measured 2026-09-19: 10,035 chars was cut). Fail loudly, at the top, where the preview still shows it.
-  const BUDGET = 9500;
+  // BUDGET (v22.10.0, corrected v22.10.1): Claude Code replaces a large hook output with a 2 KB preview
+  // and a file path, so everything after the state line silently never reaches the model. Observed
+  // 2026-09-19: a 9,126-character output reached the model whole; outputs the harness labelled "9.8KB"
+  // and "9.9KB" were cut. The exact limit is unmeasured. (An earlier version of this comment said
+  // "measured: 10,035 chars was cut"; that figure was 9.8 x 1,024, not a measurement.) The budget sits
+  // below the largest size seen to pass. Fail loudly, at the top, where the preview still shows it.
+  const BUDGET = 9000;
   let text = lines.join('\n');
-  if (text.length > BUDGET) text = `EOS INJECTION OVER BUDGET: ${text.length} characters, limit about 10,000. The harness shows the model only the first 2 KB of this block, so the lens contract, lessons and mandates below are NOT in context. Tell the user now. Fix: shorten ${path.join(DIR, 'lessons-distilled.md')} or ${STATE}.\n` + text;
+  if (text.length > BUDGET) text = `EOS INJECTION OVER BUDGET: ${text.length} characters, budget ${BUDGET}; the harness cuts large hook outputs. It shows the model only the first 2 KB of this block, so the lens contract, lessons and mandates below are NOT in context. Tell the user now. Fix: shorten ${path.join(DIR, 'lessons-distilled.md')} or ${STATE}.\n` + text;
   out({
     hookSpecificOutput: {
       hookEventName: EVENT === 'prompt' ? 'UserPromptSubmit' : 'SessionStart',

@@ -64,7 +64,7 @@ Indices are stable, semantic, human-readable keys. Format: `[project]-[artifact_
 Examples:
 - `bbm-sms-flow-zapier-config`
 - `al6063-supplier-quote-march`
-- `gift8-db-schema-v2`
+- `product-b-db-schema-v2`
 - `eos-rule2-amendment-draft`
 
 Rules:

@@ -61,7 +61,7 @@ for (const m of manifest.filter(x => x.status === 'no-response')) {
   const out = path.join(VAULT, m.pageRel);
   if (fs.existsSync(out)) continue;
   fs.mkdirSync(path.dirname(out), { recursive: true });
-  fs.writeFileSync(out, `---\ntype: session\nsession_id: ${m.id}\ntitle: "${(m.title || 'Session with no reply').replace(/"/g, '')}"\ndate: ${m.date}\nended: ${m.date}\ngroup: ${m.group}\nproject: other\nkind: interactive\nstatus: failed\nbranch: ""\nworktree: "none"\nmodels: ""\nhuman_turns: ${m.humanTurns}\nentities: []\n---\n\n# ${m.title || 'Session with no reply'}\n\n## Summary\nStub written by build-index.js. The transcript holds ${m.humanTurns} human turn(s) and no reply or tool call from Claude, so there is nothing to document.\n\n## What the user asked for\nSee the digest.\n\n## What was done\nNothing. Claude produced no output.\n\n## Decisions and locks\nNone recorded.\n\n## Verification\nNothing to verify.\n\n## Corrections from the user\nNone recorded.\n\n## Open at the end\nNot stated in the digest.\n\n## Files, commits and deploys\nNone.\n\n## Limits of this page\nStub page, made by script, no agent.\n\n## Links\n- Raw digest: [[${m.digestRel.replace(/\.md$/, '')}|digest]]\n- Transcript: \`${m.transcript}\`\n`, 'utf8');
+  fs.writeFileSync(out, `---\ntype: session\nsession_id: ${m.id}\ntitle: "${(m.title || 'Session with no reply').replace(/"/g, '')}"\ndate: ${m.date}\nended: ${m.date}\ngroup: ${m.group}\nproject: other\nkind: interactive\nstatus: failed\nbranch: ""\nworktree: "none"\nmodels: ""\nhuman_turns: ${m.humanTurns}\nentities: []\n---\n\n# ${m.title || 'Session with no reply'}\n\n## Summary\nStub written by build-index.js. The transcript holds ${m.humanTurns} human turn(s) and no reply or tool call from Claude, so there is nothing to document.\n\n## What the user asked for\nSee the digest.\n\n## What was done\nNothing. Claude produced no output.\n\n## Decisions and locks\nNone recorded.\n\n## Verification\nNothing to verify.\n\n## Corrections from the user\nNone recorded.\n\n## Open at the end\nNot stated in the digest.\n\n## Files, commits and deploys\nNone.\n\n## Limits of this page\nStub page, made by script, no agent.\n\n## Links\n- Project: [[wiki/projects/other|Other]]\n- Raw digest: [[${m.digestRel.replace(/\.md$/, '')}|digest]]\n- Transcript: \`${m.transcript}\`\n`, 'utf8');
 }
 
 const pages = walk(path.join(WIKI, 'sessions')).filter(f => f.endsWith('.md') && !rel(f).includes('/_by-project/')).map(parse);
@@ -150,12 +150,13 @@ for (const proj of PROJECTS) {
 fs.writeFileSync(path.join(WIKI, 'index.md'), idx.join('\n') + '\n', 'utf8');
 
 // ---------- lint report + log ----------
+const noBrackets = s => s.split('[[').join('').split(']]').join('');
 const counts = {}; for (const i of issues) { const k = i.split('  ')[0].replace(/ ".*$/, '').replace(/ \(.*$/, ''); counts[k] = (counts[k] || 0) + 1; }
 if (LINT) fs.writeFileSync(path.join(WIKI, 'lint-report.md'), `# Lint report\n\nRun ${today}. ${issues.length} issue(s).\n\n` + (issues.length ? issues.map(i => `- ${i}`).join('\n') : 'Clean.') + '\n', 'utf8');
 if (LOGNOTE) {
   const logFile = path.join(WIKI, 'log.md');
   if (!fs.existsSync(logFile)) fs.writeFileSync(logFile, '# Wiki log\n\nAppend-only. One entry per ingest or lint pass. Newest at the bottom.\n', 'utf8');
-  fs.appendFileSync(logFile, `\n## [${today}] ${LOGNOTE}\n- transcripts found: ${manifest.length}; in window: ${inWindow.length}; older than the window, left out: ${manifest.filter(m => m.status === 'out-of-window').length}\n- session pages on disk: ${pages.length}; digests with no page: ${issues.filter(i => i.startsWith('MISSING PAGE')).length}\n- project pages: ${projectPages.length}\n- lint issues: ${issues.length}${issues.length ? ' (' + Object.entries(counts).map(([k, v]) => `${k} ${v}`).join(', ') + ')' : ''}\n`, 'utf8');
+  fs.appendFileSync(logFile, `\n## [${today}] ${LOGNOTE}\n- transcripts found: ${manifest.length}; in window: ${inWindow.length}; older than the window, left out: ${manifest.filter(m => m.status === 'out-of-window').length}\n- session pages on disk: ${pages.length}; digests with no page: ${issues.filter(i => i.startsWith('MISSING PAGE')).length}\n- project pages: ${projectPages.length}\n- lint issues: ${issues.length}${issues.length ? ' (' + Object.entries(counts).map(([k, v]) => `${noBrackets(k)} ${v}`).join(', ') + ')' : ''}\n`, 'utf8');
 }
 console.log(JSON.stringify({ linksRepaired: repaired, pages: pages.length, inWindow: inWindow.length, projectPages: projectPages.length, byProject: Object.fromEntries(Object.entries(groups).map(([k, v]) => [k, v.length])), issues: issues.length, issueCounts: counts }, null, 2));
 if (LINT && issues.length) console.log(issues.slice(0, 60).join('\n'));
